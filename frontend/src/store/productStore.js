@@ -305,6 +305,65 @@ const useProductStore = create((set, get) => ({
     }
   },
 
+  // Create a new product
+  createProduct: async (productData) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await productsAPI.createProduct(productData);
+      toast.success('Product created successfully!');
+      set({ isLoading: false });
+      // Optionally, you can refetch products or add the new one to the list
+      get().fetchProducts();
+      return response.data.data.product;
+    } catch (error) {
+      console.error('Failed to create product:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to create product';
+      toast.error(errorMessage);
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  // Update an existing product
+  updateProduct: async (productId, productData) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await productsAPI.updateProduct(productId, productData);
+      toast.success('Product updated successfully!');
+      set(state => ({
+        products: state.products.map(p => (p.id === productId ? response.data.data.product : p)),
+        currentProduct: response.data.data.product,
+        isLoading: false
+      }));
+      return response.data.data.product;
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update product';
+      toast.error(errorMessage);
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  // Delete a product
+  deleteProduct: async (productId) => {
+    try {
+      set({ isLoading: true, error: null });
+      await productsAPI.deleteProduct(productId);
+      toast.success('Product deleted successfully!');
+      set(state => ({
+        products: state.products.filter(p => p.id !== productId),
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to delete product';
+      toast.error(errorMessage);
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
   // Clear error
   clearError: () => {
     set({ error: null });

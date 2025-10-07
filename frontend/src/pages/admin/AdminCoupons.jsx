@@ -49,42 +49,14 @@ const AdminCoupons = () => {
   const fetchCoupons = async () => {
     try {
       setIsLoading(true)
-      // Real data from database
-      const realCoupons = [
-        {
-          id: 1,
-          code: 'WELCOME10',
-          name: 'Chào mừng khách hàng mới',
-          description: 'Giảm 10% cho đơn hàng đầu tiên',
-          type: 'percentage',
-          value: 10,
-          minOrderAmount: 100000,
-          maxDiscountAmount: null,
-          usageLimit: 100,
-          usageCount: 0,
-          startDate: '2025-08-22',
-          endDate: '2025-09-21',
-          status: 'active',
-          created_at: '2025-08-22T00:26:05.000Z'
-        },
-        {
-          id: 2,
-          code: 'FREESHIP',
-          name: 'Miễn phí vận chuyển',
-          description: 'Miễn phí vận chuyển cho đơn hàng từ 200k',
-          type: 'fixed',
-          value: 30000,
-          minOrderAmount: 200000,
-          maxDiscountAmount: null,
-          usageLimit: 50,
-          usageCount: 0,
-          startDate: '2025-08-22',
-          endDate: '2025-09-06',
-          status: 'active',
-          created_at: '2025-08-22T00:26:05.000Z'
-        }
-      ]
-      setCoupons(realCoupons)
+      const response = await couponsAPI.getCoupons({
+        search: searchQuery,
+        status: statusFilter,
+        type: typeFilter,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+      })
+      setCoupons(response.data.data.coupons)
     } catch (error) {
       console.error('Failed to fetch coupons:', error)
       toast.error('Không thể tải danh sách mã giảm giá')
@@ -96,26 +68,38 @@ const AdminCoupons = () => {
   const handleCreateCoupon = async (e) => {
     e.preventDefault()
     try {
-      // await couponsAPI.createCoupon(formData)
+      await couponsAPI.createCoupon({
+        ...formData,
+        value: parseFloat(formData.value),
+        minimumOrderAmount: formData.minOrderAmount ? parseFloat(formData.minOrderAmount) : null,
+        maximumDiscountAmount: formData.maxDiscountAmount ? parseFloat(formData.maxDiscountAmount) : null,
+        usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+      })
       toast.success('Tạo mã giảm giá thành công')
       setShowCreateModal(false)
       resetForm()
       fetchCoupons()
     } catch (error) {
-      toast.error('Không thể tạo mã giảm giá')
+      toast.error(error.response?.data?.message || 'Không thể tạo mã giảm giá')
     }
   }
 
   const handleUpdateCoupon = async (e) => {
     e.preventDefault()
     try {
-      // await couponsAPI.updateCoupon(editingCoupon.id, formData)
+      await couponsAPI.updateCoupon(editingCoupon.id, {
+        ...formData,
+        value: parseFloat(formData.value),
+        minimumOrderAmount: formData.minOrderAmount ? parseFloat(formData.minOrderAmount) : null,
+        maximumDiscountAmount: formData.maxDiscountAmount ? parseFloat(formData.maxDiscountAmount) : null,
+        usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
+      })
       toast.success('Cập nhật mã giảm giá thành công')
       setEditingCoupon(null)
       resetForm()
       fetchCoupons()
     } catch (error) {
-      toast.error('Không thể cập nhật mã giảm giá')
+      toast.error(error.response?.data?.message || 'Không thể cập nhật mã giảm giá')
     }
   }
 
@@ -123,21 +107,21 @@ const AdminCoupons = () => {
     if (!confirm('Bạn có chắc chắn muốn xóa mã giảm giá này?')) return
 
     try {
-      // await couponsAPI.deleteCoupon(couponId)
+      await couponsAPI.deleteCoupon(couponId)
       toast.success('Xóa mã giảm giá thành công')
       fetchCoupons()
     } catch (error) {
-      toast.error('Không thể xóa mã giảm giá')
+      toast.error(error.response?.data?.message || 'Không thể xóa mã giảm giá')
     }
   }
 
   const handleStatusChange = async (couponId, newStatus) => {
     try {
-      // await couponsAPI.updateCouponStatus(couponId, newStatus)
+      await couponsAPI.updateCouponStatus(couponId, newStatus)
       toast.success('Cập nhật trạng thái thành công')
       fetchCoupons()
     } catch (error) {
-      toast.error('Không thể cập nhật trạng thái')
+      toast.error(error.response?.data?.message || 'Không thể cập nhật trạng thái')
     }
   }
 
@@ -171,12 +155,12 @@ const AdminCoupons = () => {
       description: coupon.description,
       type: coupon.type,
       value: coupon.value.toString(),
-      minOrderAmount: coupon.minOrderAmount?.toString() || '',
+      minOrderAmount: coupon.minimumOrderAmount?.toString() || '',
       maxDiscountAmount: coupon.maxDiscountAmount?.toString() || '',
       usageLimit: coupon.usageLimit?.toString() || '',
-      usageCount: coupon.usageCount,
-      startDate: coupon.startDate,
-      endDate: coupon.endDate,
+      usageCount: coupon.usedCount,
+      startDate: coupon.startsAt,
+      endDate: coupon.expiresAt,
       status: coupon.status
     })
   }
@@ -263,9 +247,9 @@ const AdminCoupons = () => {
   }
 
   const CouponRow = ({ coupon }) => {
-    const usagePercentage = coupon.usageLimit ? (coupon.usageCount / coupon.usageLimit) * 100 : 0
-    const isExpired = new Date(coupon.endDate) < new Date()
-    const isUsedUp = coupon.usageLimit && coupon.usageCount >= coupon.usageLimit
+    const usagePercentage = coupon.usageLimit ? (coupon.usedCount / coupon.usageLimit) * 100 : 0
+    const isExpired = new Date(coupon.expiresAt) < new Date()
+    const isUsedUp = coupon.usageLimit && coupon.usedCount >= coupon.usageLimit
 
     return (
       <tr className="hover:bg-gray-50">
@@ -300,15 +284,15 @@ const AdminCoupons = () => {
               {formatDiscountValue(coupon.type, coupon.value)}
             </span>
           </div>
-          {coupon.minOrderAmount && (
+          {coupon.minimumOrderAmount && (
             <div className="text-xs text-gray-500">
-              Đơn tối thiểu: {formatPrice(coupon.minOrderAmount)}
+              Đơn tối thiểu: {formatPrice(coupon.minimumOrderAmount)}
             </div>
           )}
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="text-sm text-gray-900">
-            {coupon.usageCount} / {coupon.usageLimit || '∞'}
+            {coupon.usedCount} / {coupon.usageLimit || '∞'}
           </div>
           {coupon.usageLimit && (
             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
@@ -325,14 +309,14 @@ const AdminCoupons = () => {
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="text-sm text-gray-900 flex items-center">
             <Calendar className="w-3 h-3 mr-1" />
-            {formatDate(coupon.startDate)}
+            {formatDate(coupon.startsAt)}
           </div>
           <div className="text-sm text-gray-500">
-            đến {formatDate(coupon.endDate)}
+            đến {formatDate(coupon.expiresAt)}
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          {getStatusBadge(coupon.status, coupon.endDate)}
+          {getStatusBadge(coupon.status, coupon.expiresAt)}
           {isUsedUp && (
             <div className="mt-1">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -468,7 +452,7 @@ const AdminCoupons = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Đang hoạt động</p>
               <p className="text-2xl font-bold text-gray-900">
-                {coupons.filter(c => c.status === 'active' && new Date(c.endDate) >= new Date()).length}
+                {coupons.filter(c => c.status === 'active' && new Date(c.expiresAt) >= new Date()).length}
               </p>
             </div>
           </div>
@@ -479,7 +463,7 @@ const AdminCoupons = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Lượt sử dụng</p>
               <p className="text-2xl font-bold text-gray-900">
-                {coupons.reduce((sum, coupon) => sum + coupon.usageCount, 0)}
+                {coupons.reduce((sum, coupon) => sum + (coupon.usedCount || 0), 0)}
               </p>
             </div>
           </div>
@@ -490,7 +474,7 @@ const AdminCoupons = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Hết hạn</p>
               <p className="text-2xl font-bold text-gray-900">
-                {coupons.filter(c => new Date(c.endDate) < new Date()).length}
+                {coupons.filter(c => new Date(c.expiresAt) < new Date()).length}
               </p>
             </div>
           </div>

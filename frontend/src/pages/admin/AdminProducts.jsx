@@ -24,7 +24,8 @@ const AdminProducts = () => {
     isLoading,
     fetchProducts,
     fetchCategories,
-    updateProductStatus
+    updateProductStatus,
+    deleteProduct
   } = useProductStore()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -72,7 +73,24 @@ const AdminProducts = () => {
     } catch (error) {
       toast.error('Không thể cập nhật trạng thái')
     }
-  }
+  };
+
+  const handleDelete = async (productId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
+      try {
+        await deleteProduct(productId);
+        // The store now handles toast messages, so we might not need one here
+        // toast.success('Sản phẩm đã được xóa thành công');
+        // The store also handles removing the product from the list, so a manual refetch might be optional
+        // but good for consistency.
+        fetchProducts(); 
+      } catch (error) {
+        // The store now handles error toasts
+        // toast.error('Không thể xóa sản phẩm.');
+        console.error("Failed to delete product:", error);
+      }
+    }
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -150,6 +168,13 @@ const AdminProducts = () => {
             <Edit className="w-4 h-4" />
           </Link>
           <button
+            onClick={() => handleDelete(product.id)}
+            className="text-red-600 hover:text-red-900"
+            title="Xóa"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => handleStatusChange(
               product.id,
               product.status === 'active' ? 'inactive' : 'active'
@@ -160,6 +185,13 @@ const AdminProducts = () => {
             title={product.status === 'active' ? 'Tạm dừng' : 'Kích hoạt'}
           >
             {product.status === 'active' ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={() => handleDelete(product.id)}
+            className="text-red-600 hover:text-red-900"
+            title="Xóa sản phẩm"
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </td>

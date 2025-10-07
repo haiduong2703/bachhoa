@@ -16,7 +16,7 @@ const ContactPage = () => {
     {
       icon: MapPin,
       title: 'Địa chỉ',
-      content: '123 Đường ABC, Phường 1, Quận 1, TP.HCM',
+      content: '322 Lê Trọng Tấn, Khương Mai, Hà Nội',
       subContent: 'Tầng 1-2, Tòa nhà Bach Hoa Center'
     },
     {
@@ -245,7 +245,7 @@ const ContactPage = () => {
                   <div className="text-center">
                     <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                     <p className="text-gray-500">Bản đồ Google Maps</p>
-                    <p className="text-sm text-gray-400">123 Đường ABC, Phường 1, Quận 1, TP.HCM</p>
+                    <p className="text-sm text-gray-400">322 Lê Trọng Tấn, Khương Mai, Hà Nội</p>
                   </div>
                 </div>
               </div>

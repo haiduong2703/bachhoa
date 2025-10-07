@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { useCartStore } from '../../store/cartStore'
 import { Search, ShoppingCart, User, Menu, X } from 'lucide-react'
-
+import logo from "../../asset/icon.png"
 const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
   const { user, isAuthenticated, logout } = useAuthStore()
   const { getItemCount } = useCartStore()
@@ -37,8 +37,8 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">BH</span>
+            <div className="w-8 h-8  rounded-lg flex items-center justify-center">
+              <img src={logo} alt="Logo" />
             </div>
             <span className="text-xl font-bold text-gray-900 hidden sm:block">
               Bach Hoa

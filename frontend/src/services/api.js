@@ -168,8 +168,10 @@ export const couponsAPI = {
   getCoupon: (id) => api.get(`/coupons/${id}`),
   createCoupon: (data) => api.post('/coupons', data),
   updateCoupon: (id, data) => api.put(`/coupons/${id}`, data),
+  updateCouponStatus: (id, status) => api.patch(`/coupons/${id}/status`, { status }),
   deleteCoupon: (id) => api.delete(`/coupons/${id}`),
   validateCoupon: (code) => api.post('/coupons/validate', { code }),
+  getCouponStats: () => api.get('/coupons/stats'),
 }
 
 // Reviews API

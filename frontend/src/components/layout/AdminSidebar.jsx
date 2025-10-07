@@ -45,11 +45,11 @@ const AdminSidebar = ({ onClose }) => {
       path: '/admin/orders',
       icon: ShoppingBag
     },
-    {
-      label: 'Mã giảm giá',
-      path: '/admin/coupons',
-      icon: Tag
-    },
+    // {
+    //   label: 'Mã giảm giá',
+    //   path: '/admin/coupons',
+    //   icon: Tag
+    // },
     {
       label: 'Mã giảm giá',
       path: '/admin/coupons',
