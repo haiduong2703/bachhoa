@@ -13,6 +13,8 @@ import {
   Settings
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
+import { statsAPI } from '../../services/api'
+import toast from 'react-hot-toast'
 
 const AdminDashboard = () => {
   const { user } = useAuthStore()
@@ -24,20 +26,43 @@ const AdminDashboard = () => {
     pendingOrders: 0,
     lowStockProducts: 0
   })
+  const [trends, setTrends] = useState({
+    revenue: { percentage: 0, current: 0, previous: 0 }
+  })
+  const [loading, setLoading] = useState(true)
 
-  // Mock data - in real app, fetch from API
+  // Fetch real data from API
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setStats({
-        totalUsers: 1247,
-        totalProducts: 156,
-        totalOrders: 892,
-        totalRevenue: 45678900,
-        pendingOrders: 23,
-        lowStockProducts: 8
-      })
-    }, 1000)
+    const fetchDashboardStats = async () => {
+      try {
+        setLoading(true)
+        console.log('📊 Fetching dashboard stats from API...')
+        
+        const response = await statsAPI.getDashboardStats()
+        console.log('✅ Dashboard stats received:', response.data)
+        
+        const data = response.data.data
+        setStats({
+          totalUsers: data.totalUsers || 0,
+          totalProducts: data.totalProducts || 0,
+          totalOrders: data.totalOrders || 0,
+          totalRevenue: data.totalRevenue || 0,
+          pendingOrders: data.pendingOrders || 0,
+          lowStockProducts: data.lowStockProducts || 0
+        })
+        
+        if (data.trends) {
+          setTrends(data.trends)
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch dashboard stats:', error)
+        toast.error('Không thể tải thống kê dashboard')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardStats()
   }, [])
 
   const formatCurrency = (amount) => {
@@ -100,6 +125,17 @@ const AdminDashboard = () => {
     </Link>
   )
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Đang tải thống kê...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -136,8 +172,6 @@ const AdminDashboard = () => {
           title="Tổng người dùng"
           value={stats.totalUsers.toLocaleString()}
           icon={Users}
-          trend="up"
-          trendValue="+12% so với tháng trước"
           color="blue"
           link="/admin/users"
         />
@@ -145,8 +179,6 @@ const AdminDashboard = () => {
           title="Tổng sản phẩm"
           value={stats.totalProducts.toLocaleString()}
           icon={Package}
-          trend="up"
-          trendValue="+5 sản phẩm mới"
           color="green"
           link="/admin/products"
         />
@@ -154,8 +186,6 @@ const AdminDashboard = () => {
           title="Tổng đơn hàng"
           value={stats.totalOrders.toLocaleString()}
           icon={ShoppingCart}
-          trend="up"
-          trendValue="+8% so với tuần trước"
           color="purple"
           link="/admin/orders"
         />
@@ -163,8 +193,8 @@ const AdminDashboard = () => {
           title="Doanh thu"
           value={formatCurrency(stats.totalRevenue)}
           icon={DollarSign}
-          trend="up"
-          trendValue="+15% so với tháng trước"
+          trend={trends.revenue.percentage >= 0 ? 'up' : 'down'}
+          trendValue={`${trends.revenue.percentage >= 0 ? '+' : ''}${trends.revenue.percentage}% so với tháng trước`}
           color="yellow"
           link="/admin/reports"
         />

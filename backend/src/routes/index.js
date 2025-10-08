@@ -6,6 +6,7 @@ import orderRoutes from './orders.js';
 import userRoutes from './users.js';
 import uploadRoutes from './uploads.js';
 import couponRoutes from './coupons.js';
+import statsRoutes from './stats.js';
 
 const router = express.Router();
 
@@ -52,6 +53,7 @@ router.use(`${API_VERSION}/orders`, orderRoutes);
 router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}/uploads`, uploadRoutes);
 router.use(`${API_VERSION}/coupons`, couponRoutes);
+router.use(`${API_VERSION}/stats`, statsRoutes);
 
 // 404 handler for API routes
 router.use(`${API_VERSION}/*`, (req, res) => {

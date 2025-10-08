@@ -1,7 +1,13 @@
-import { Product, Category, ProductImage, Inventory, ProductCategory } from '../models/index.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
-import { catchAsync } from '../utils/errors.js';
-import { Op } from 'sequelize';
+import {
+  Product,
+  Category,
+  ProductImage,
+  Inventory,
+  ProductCategory,
+} from "../models/index.js";
+import { NotFoundError, ValidationError } from "../utils/errors.js";
+import { catchAsync } from "../utils/errors.js";
+import { Op } from "sequelize";
 
 /**
  * Get all products with filtering, sorting, and pagination
@@ -15,10 +21,10 @@ export const getProducts = catchAsync(async (req, res) => {
     category,
     minPrice,
     maxPrice,
-    status = 'active',
+    status = "active",
     featured,
-    sort = 'created_at',
-    order = 'desc'
+    sort = "created_at",
+    order = "desc",
   } = req.query;
 
   const offset = (page - 1) * limit;
@@ -26,20 +32,23 @@ export const getProducts = catchAsync(async (req, res) => {
   const include = [
     {
       model: ProductImage,
-      as: 'images',
-      where: { isPrimary: true },
+      as: "images",
       required: false,
-      limit: 1
+      separate: true, // Important: This allows ORDER BY in associations
+      order: [
+        ["isPrimary", "DESC"],
+        ["sortOrder", "ASC"],
+      ],
     },
     {
       model: Category,
-      as: 'categories',
-      through: { attributes: [] }
+      as: "categories",
+      through: { attributes: [] },
     },
     {
       model: Inventory,
-      as: 'inventory'
-    }
+      as: "inventory",
+    },
   ];
 
   // Build where conditions
@@ -48,7 +57,7 @@ export const getProducts = catchAsync(async (req, res) => {
   }
 
   if (featured !== undefined) {
-    where.featured = featured === 'true';
+    where.featured = featured === "true";
   }
 
   // Handle search query (support both 'q' and 'search' parameters for backward compatibility)
@@ -57,7 +66,7 @@ export const getProducts = catchAsync(async (req, res) => {
     where[Op.or] = [
       { name: { [Op.like]: `%${searchQuery}%` } },
       { description: { [Op.like]: `%${searchQuery}%` } },
-      { sku: { [Op.like]: `%${searchQuery}%` } }
+      { sku: { [Op.like]: `%${searchQuery}%` } },
     ];
   }
 
@@ -71,23 +80,23 @@ export const getProducts = catchAsync(async (req, res) => {
   if (category) {
     include.push({
       model: Category,
-      as: 'categories',
+      as: "categories",
       where: { id: category },
       through: { attributes: [] },
-      required: true
+      required: true,
     });
   }
 
   // Build order clause
   const orderClause = [];
-  if (sort === 'price') {
-    orderClause.push(['price', order.toUpperCase()]);
-  } else if (sort === 'name') {
-    orderClause.push(['name', order.toUpperCase()]);
-  } else if (sort === 'featured') {
-    orderClause.push(['featured', 'DESC'], ['created_at', 'DESC']);
+  if (sort === "price") {
+    orderClause.push(["price", order.toUpperCase()]);
+  } else if (sort === "name") {
+    orderClause.push(["name", order.toUpperCase()]);
+  } else if (sort === "featured") {
+    orderClause.push(["featured", "DESC"], ["created_at", "DESC"]);
   } else {
-    orderClause.push(['created_at', order.toUpperCase()]);
+    orderClause.push(["created_at", order.toUpperCase()]);
   }
 
   const { count, rows: products } = await Product.findAndCountAll({
@@ -96,13 +105,20 @@ export const getProducts = catchAsync(async (req, res) => {
     limit: parseInt(limit),
     offset: parseInt(offset),
     order: orderClause,
-    distinct: true
+    distinct: true,
   });
+
+  console.log(`📦 Found ${products.length} products`);
+  if (products.length > 0) {
+    console.log(
+      `🖼️  First product images count: ${products[0].images?.length || 0}`
+    );
+  }
 
   const totalPages = Math.ceil(count / limit);
 
   res.json({
-    status: 'success',
+    status: "success",
     data: {
       products,
       pagination: {
@@ -111,9 +127,9 @@ export const getProducts = catchAsync(async (req, res) => {
         totalItems: count,
         itemsPerPage: parseInt(limit),
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
-    }
+        hasPrevPage: page > 1,
+      },
+    },
   });
 });
 
@@ -125,36 +141,36 @@ export const getFeaturedProducts = catchAsync(async (req, res) => {
 
   const products = await Product.findAll({
     where: {
-      status: 'active',
-      featured: true
+      status: "active",
+      featured: true,
     },
     include: [
       {
         model: ProductImage,
-        as: 'images',
+        as: "images",
         where: { isPrimary: true },
         required: false,
-        limit: 1
+        limit: 1,
       },
       {
         model: Category,
-        as: 'categories',
-        through: { attributes: [] }
+        as: "categories",
+        through: { attributes: [] },
       },
       {
         model: Inventory,
-        as: 'inventory'
-      }
+        as: "inventory",
+      },
     ],
     limit: parseInt(limit),
-    order: [['created_at', 'DESC']]
+    order: [["created_at", "DESC"]],
   });
 
   res.json({
-    status: 'success',
+    status: "success",
     data: {
-      products
-    }
+      products,
+    },
   });
 });
 
@@ -172,30 +188,34 @@ export const getProduct = catchAsync(async (req, res) => {
     include: [
       {
         model: ProductImage,
-        as: 'images',
-        order: [['sortOrder', 'ASC'], ['isPrimary', 'DESC']]
+        as: "images",
+        separate: true,
+        order: [
+          ["isPrimary", "DESC"],
+          ["sortOrder", "ASC"],
+        ],
       },
       {
         model: Category,
-        as: 'categories',
-        through: { attributes: [] }
+        as: "categories",
+        through: { attributes: [] },
       },
       {
         model: Inventory,
-        as: 'inventory'
-      }
-    ]
+        as: "inventory",
+      },
+    ],
   });
 
   if (!product) {
-    throw new NotFoundError('Product not found');
+    throw new NotFoundError("Product not found");
   }
 
   res.json({
-    status: 'success',
+    status: "success",
     data: {
-      product
-    }
+      product,
+    },
   });
 });
 
@@ -218,13 +238,14 @@ export const createProduct = catchAsync(async (req, res) => {
     metaTitle,
     metaDescription,
     categoryIds,
-    inventory
+    inventory,
+    imageIds,
   } = req.body;
 
   // Check if SKU already exists
   const existingProduct = await Product.findBySku(sku);
   if (existingProduct) {
-    throw new ValidationError('SKU already exists');
+    throw new ValidationError("SKU already exists");
   }
 
   // Create product
@@ -241,15 +262,39 @@ export const createProduct = catchAsync(async (req, res) => {
     status,
     featured,
     metaTitle,
-    metaDescription
+    metaDescription,
   });
 
   // Add categories
   if (categoryIds && categoryIds.length > 0) {
     const categories = await Category.findAll({
-      where: { id: categoryIds }
+      where: { id: categoryIds },
     });
     await product.setCategories(categories);
+  }
+
+  // Link images to product
+  if (imageIds && imageIds.length > 0) {
+    console.log("🖼️  Linking images to product:", {
+      productId: product.id,
+      imageIds,
+    });
+
+    // Update all images: set product_id and reset isPrimary
+    await ProductImage.update(
+      { productId: product.id, isPrimary: false },
+      { where: { id: imageIds } }
+    );
+
+    console.log("✅ Images linked, setting first as primary:", imageIds[0]);
+
+    // Set first image as primary
+    await ProductImage.update(
+      { isPrimary: true },
+      { where: { id: imageIds[0], productId: product.id } }
+    );
+
+    console.log("✅ Primary image set");
   }
 
   // Create inventory record
@@ -258,7 +303,7 @@ export const createProduct = catchAsync(async (req, res) => {
       productId: product.id,
       quantity: inventory.quantity || 0,
       lowStockThreshold: inventory.lowStockThreshold || 10,
-      trackQuantity: inventory.trackQuantity !== false
+      trackQuantity: inventory.trackQuantity !== false,
     });
   }
 
@@ -266,23 +311,32 @@ export const createProduct = catchAsync(async (req, res) => {
   await product.reload({
     include: [
       {
+        model: ProductImage,
+        as: "images",
+        separate: true,
+        order: [
+          ["isPrimary", "DESC"],
+          ["sortOrder", "ASC"],
+        ],
+      },
+      {
         model: Category,
-        as: 'categories',
-        through: { attributes: [] }
+        as: "categories",
+        through: { attributes: [] },
       },
       {
         model: Inventory,
-        as: 'inventory'
-      }
-    ]
+        as: "inventory",
+      },
+    ],
   });
 
   res.status(201).json({
-    status: 'success',
-    message: 'Product created successfully',
+    status: "success",
+    message: "Product created successfully",
     data: {
-      product
-    }
+      product,
+    },
   });
 });
 
@@ -295,14 +349,14 @@ export const updateProduct = catchAsync(async (req, res) => {
 
   const product = await Product.findByPk(id);
   if (!product) {
-    throw new NotFoundError('Product not found');
+    throw new NotFoundError("Product not found");
   }
 
   // Check SKU uniqueness if being updated
   if (updateData.sku && updateData.sku !== product.sku) {
     const existingProduct = await Product.findBySku(updateData.sku);
     if (existingProduct) {
-      throw new ValidationError('SKU already exists');
+      throw new ValidationError("SKU already exists");
     }
   }
 
@@ -312,15 +366,52 @@ export const updateProduct = catchAsync(async (req, res) => {
   // Update categories if provided
   if (updateData.categoryIds) {
     const categories = await Category.findAll({
-      where: { id: updateData.categoryIds }
+      where: { id: updateData.categoryIds },
     });
     await product.setCategories(categories);
+  }
+
+  // Update images if provided
+  if (updateData.imageIds) {
+    console.log("🖼️  Updating product images:", {
+      productId: product.id,
+      imageIds: updateData.imageIds,
+    });
+
+    // Clear existing product images association (unlink old images)
+    await ProductImage.update(
+      { productId: null, isPrimary: false },
+      { where: { productId: product.id } }
+    );
+
+    console.log("✅ Old images unlinked");
+
+    // Link new images to product
+    if (updateData.imageIds.length > 0) {
+      await ProductImage.update(
+        { productId: product.id, isPrimary: false },
+        { where: { id: updateData.imageIds } }
+      );
+
+      console.log(
+        "✅ New images linked, setting first as primary:",
+        updateData.imageIds[0]
+      );
+
+      // Set first image as primary
+      await ProductImage.update(
+        { isPrimary: true },
+        { where: { id: updateData.imageIds[0], productId: product.id } }
+      );
+
+      console.log("✅ Primary image set");
+    }
   }
 
   // Update inventory if provided
   if (updateData.inventory) {
     const inventory = await Inventory.findOne({
-      where: { productId: product.id }
+      where: { productId: product.id },
     });
 
     if (inventory) {
@@ -328,7 +419,7 @@ export const updateProduct = catchAsync(async (req, res) => {
     } else {
       await Inventory.create({
         productId: product.id,
-        ...updateData.inventory
+        ...updateData.inventory,
       });
     }
   }
@@ -338,27 +429,31 @@ export const updateProduct = catchAsync(async (req, res) => {
     include: [
       {
         model: ProductImage,
-        as: 'images',
-        order: [['sortOrder', 'ASC']]
+        as: "images",
+        separate: true,
+        order: [
+          ["isPrimary", "DESC"],
+          ["sortOrder", "ASC"],
+        ],
       },
       {
         model: Category,
-        as: 'categories',
-        through: { attributes: [] }
+        as: "categories",
+        through: { attributes: [] },
       },
       {
         model: Inventory,
-        as: 'inventory'
-      }
-    ]
+        as: "inventory",
+      },
+    ],
   });
 
   res.json({
-    status: 'success',
-    message: 'Product updated successfully',
+    status: "success",
+    message: "Product updated successfully",
     data: {
-      product
-    }
+      product,
+    },
   });
 });
 
@@ -370,14 +465,14 @@ export const deleteProduct = catchAsync(async (req, res) => {
 
   const product = await Product.findByPk(id);
   if (!product) {
-    throw new NotFoundError('Product not found');
+    throw new NotFoundError("Product not found");
   }
 
   await product.destroy();
 
   res.json({
-    status: 'success',
-    message: 'Product deleted successfully'
+    status: "success",
+    message: "Product deleted successfully",
   });
 });
 
@@ -390,21 +485,21 @@ export const updateProductStatus = catchAsync(async (req, res) => {
 
   const product = await Product.findByPk(id);
   if (!product) {
-    throw new NotFoundError('Product not found');
+    throw new NotFoundError("Product not found");
   }
 
   await product.update({ status });
 
   res.json({
-    status: 'success',
-    message: 'Product status updated successfully',
+    status: "success",
+    message: "Product status updated successfully",
     data: {
       product: {
         id: product.id,
         name: product.name,
-        status: product.status
-      }
-    }
+        status: product.status,
+      },
+    },
   });
 });
 
@@ -413,47 +508,52 @@ export const updateProductStatus = catchAsync(async (req, res) => {
  */
 export const getProductsByCategory = catchAsync(async (req, res) => {
   const { categoryId } = req.params;
-  const { page = 1, limit = 12, sort = 'created_at', order = 'desc' } = req.query;
+  const {
+    page = 1,
+    limit = 12,
+    sort = "created_at",
+    order = "desc",
+  } = req.query;
 
   const offset = (page - 1) * limit;
 
   const category = await Category.findByPk(categoryId);
   if (!category) {
-    throw new NotFoundError('Category not found');
+    throw new NotFoundError("Category not found");
   }
 
   const { count, rows: products } = await Product.findAndCountAll({
     include: [
       {
         model: Category,
-        as: 'categories',
+        as: "categories",
         where: { id: categoryId },
         through: { attributes: [] },
-        required: true
+        required: true,
       },
       {
         model: ProductImage,
-        as: 'images',
+        as: "images",
         where: { isPrimary: true },
         required: false,
-        limit: 1
+        limit: 1,
       },
       {
         model: Inventory,
-        as: 'inventory'
-      }
+        as: "inventory",
+      },
     ],
-    where: { status: 'active' },
+    where: { status: "active" },
     limit: parseInt(limit),
     offset: parseInt(offset),
     order: [[sort, order.toUpperCase()]],
-    distinct: true
+    distinct: true,
   });
 
   const totalPages = Math.ceil(count / limit);
 
   res.json({
-    status: 'success',
+    status: "success",
     data: {
       category,
       products,
@@ -463,8 +563,8 @@ export const getProductsByCategory = catchAsync(async (req, res) => {
         totalItems: count,
         itemsPerPage: parseInt(limit),
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
-      }
-    }
+        hasPrevPage: page > 1,
+      },
+    },
   });
 });

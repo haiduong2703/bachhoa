@@ -1,22 +1,151 @@
-import express from 'express';
+import express from "express";
+import uploadService from "../services/uploadService.js";
+import { ProductImage } from "../models/index.js";
+import { authenticate } from "../middlewares/auth.js";
+import { catchAsync } from "../utils/errors.js";
 
 const router = express.Router();
 
-// Placeholder routes for uploads
-router.post('/image', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'Upload image endpoint - under development',
-    data: { url: '/uploads/placeholder.jpg' }
-  });
-});
+// Upload single image
+router.post(
+  "/image",
+  authenticate,
+  uploadService.createUploadMiddleware({
+    subfolder: "products",
+    maxFiles: 1,
+    fieldName: "file",
+  }),
+  catchAsync(async (req, res) => {
+    console.log("📸 Upload request received");
+    console.log("File:", req.file);
+    console.log("Body:", req.body);
 
-router.post('/images', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'Upload multiple images endpoint - under development',
-    data: { urls: ['/uploads/placeholder1.jpg', '/uploads/placeholder2.jpg'] }
-  });
-});
+    if (!req.file) {
+      console.log("❌ No file in request");
+      return res.status(400).json({
+        status: "error",
+        message: "No file uploaded",
+      });
+    }
+
+    const type = req.body.type || "product";
+    console.log(`📦 Upload type: ${type}`);
+    let result;
+
+    if (type === "product") {
+      console.log("🔄 Processing product image...");
+      result = await uploadService.uploadProductImage(req.file);
+      console.log("✅ Image processed:", result);
+
+      // Save to database
+      const productImage = await ProductImage.create({
+        imageUrl: result.variants.medium.url,
+        thumbnailUrl: result.variants.thumbnail.url,
+        altText: req.body.altText || "",
+        isPrimary: false,
+      });
+      console.log("💾 Saved to database, ID:", productImage.id);
+
+      res.json({
+        status: "success",
+        message: "Image uploaded successfully",
+        data: {
+          id: productImage.id,
+          url: result.variants.medium.url,
+          thumbnailUrl: result.variants.thumbnail.url,
+          variants: result.variants,
+        },
+      });
+    } else {
+      // For other types, just return the file path
+      const url = `/uploads/${type}s/${req.file.filename}`;
+      console.log("📁 File saved at:", url);
+      res.json({
+        status: "success",
+        message: "File uploaded successfully",
+        data: { url },
+      });
+    }
+  })
+);
+
+// Upload multiple images
+router.post(
+  "/images",
+  authenticate,
+  uploadService.createUploadMiddleware({
+    subfolder: "products",
+    maxFiles: 10,
+    fieldName: "files",
+  }),
+  catchAsync(async (req, res) => {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "No files uploaded",
+      });
+    }
+
+    const type = req.body.type || "product";
+    const uploadResults = [];
+
+    if (type === "product") {
+      for (const file of req.files) {
+        const result = await uploadService.uploadProductImage(file);
+
+        // Save to database
+        const productImage = await ProductImage.create({
+          imageUrl: result.variants.medium.url,
+          thumbnailUrl: result.variants.thumbnail.url,
+          altText: "",
+          isPrimary: false,
+        });
+
+        uploadResults.push({
+          id: productImage.id,
+          url: result.variants.medium.url,
+          thumbnailUrl: result.variants.thumbnail.url,
+        });
+      }
+    } else {
+      for (const file of req.files) {
+        const url = `/uploads/${type}s/${file.filename}`;
+        uploadResults.push({ url });
+      }
+    }
+
+    res.json({
+      status: "success",
+      message: `${uploadResults.length} images uploaded successfully`,
+      data: { images: uploadResults },
+    });
+  })
+);
+
+// Delete image
+router.delete(
+  "/image",
+  authenticate,
+  catchAsync(async (req, res) => {
+    const { imagePath, imageId } = req.body;
+
+    if (imageId) {
+      // Delete from database
+      const productImage = await ProductImage.findByPk(imageId);
+      if (productImage) {
+        await productImage.destroy();
+      }
+    }
+
+    if (imagePath) {
+      await uploadService.deleteFile(imagePath);
+    }
+
+    res.json({
+      status: "success",
+      message: "Image deleted successfully",
+    });
+  })
+);
 
 export default router;

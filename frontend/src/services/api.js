@@ -226,6 +226,13 @@ export const uploadAPI = {
   deleteImage: (imagePath) => api.delete('/uploads/image', { data: { imagePath } }),
 }
 
+// Stats API (Admin)
+export const statsAPI = {
+  getDashboardStats: () => api.get('/stats/dashboard'),
+  getSalesStats: (params) => api.get('/stats/sales', { params }),
+  getTopProducts: (params) => api.get('/stats/top-products', { params }),
+}
+
 // Reports API (Admin)
 export const reportsAPI = {
   getDashboardStats: () => api.get('/reports/dashboard'),

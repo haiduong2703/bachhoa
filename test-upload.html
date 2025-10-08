@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Upload Image</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      .upload-area {
+        border: 2px dashed #ccc;
+        padding: 40px;
+        text-align: center;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+      .btn {
+        background: #2196f3;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .btn:hover {
+        background: #1976d2;
+      }
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .preview {
+        margin: 20px 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .preview img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+      .log {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .success {
+        color: green;
+      }
+      .error {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Test Upload Image API</h1>
+
+    <div>
+      <label>
+        <strong>Token (Admin):</strong>
+        <input
+          type="text"
+          id="token"
+          style="width: 100%; padding: 8px; margin: 10px 0"
+          placeholder="Paste your access token here"
+        />
+      </label>
+      <p style="color: #666; font-size: 14px">
+        💡 Lấy token: Đăng nhập admin → Mở DevTools (F12) → Console → gõ:
+        <code>localStorage.getItem('auth-storage')</code>
+      </p>
+    </div>
+
+    <div class="upload-area">
+      <input
+        type="file"
+        id="fileInput"
+        accept="image/*"
+        multiple
+        style="display: none"
+      />
+      <button
+        class="btn"
+        onclick="document.getElementById('fileInput').click()"
+      >
+        📁 Chọn ảnh
+      </button>
+      <p id="fileInfo">Chưa chọn file</p>
+    </div>
+
+    <button class="btn" id="uploadBtn" onclick="uploadImages()" disabled>
+      ⬆️ Upload
+    </button>
+
+    <div id="preview" class="preview"></div>
+
+    <h3>📋 Log:</h3>
+    <div id="log" class="log"></div>
+
+    <script>
+      const API_URL = "http://localhost:5000/api/v1";
+      let selectedFiles = [];
+
+      document.getElementById("fileInput").addEventListener("change", (e) => {
+        selectedFiles = Array.from(e.target.files);
+        document.getElementById(
+          "fileInfo"
+        ).textContent = `Đã chọn ${selectedFiles.length} file`;
+        document.getElementById("uploadBtn").disabled =
+          selectedFiles.length === 0;
+
+        // Preview
+        const preview = document.getElementById("preview");
+        preview.innerHTML = "";
+        selectedFiles.forEach((file) => {
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(file);
+          preview.appendChild(img);
+        });
+      });
+
+      function addLog(message, type = "info") {
+        const log = document.getElementById("log");
+        const timestamp = new Date().toLocaleTimeString();
+        const className =
+          type === "success" ? "success" : type === "error" ? "error" : "";
+        log.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      async function uploadImages() {
+        const token = document.getElementById("token").value.trim();
+
+        if (!token) {
+          alert("Vui lòng nhập token!");
+          return;
+        }
+
+        // Parse token from localStorage format if needed
+        let accessToken = token;
+        try {
+          const parsed = JSON.parse(token);
+          accessToken = parsed.state?.tokens?.accessToken || token;
+        } catch (e) {
+          // Use as is
+        }
+
+        addLog(`🚀 Bắt đầu upload ${selectedFiles.length} ảnh...`);
+        const uploadBtn = document.getElementById("uploadBtn");
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "⏳ Đang upload...";
+
+        const results = [];
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          addLog(
+            `📤 Upload file ${i + 1}/${selectedFiles.length}: ${file.name}`
+          );
+
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("type", "product");
+
+          try {
+            const response = await fetch(`${API_URL}/uploads/image`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              addLog(`✅ Upload thành công: ${file.name}`, "success");
+              addLog(`   → ID: ${data.data.id}`, "success");
+              addLog(`   → URL: ${data.data.url}`, "success");
+              results.push(data.data);
+            } else {
+              addLog(`❌ Lỗi: ${data.message}`, "error");
+            }
+          } catch (error) {
+            addLog(`❌ Lỗi kết nối: ${error.message}`, "error");
+          }
+        }
+
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = "⬆️ Upload";
+
+        if (results.length > 0) {
+          addLog(
+            `\n🎉 Hoàn thành! Upload được ${results.length}/${selectedFiles.length} ảnh`,
+            "success"
+          );
+          addLog(`\n📊 Kết quả:`, "success");
+          addLog(JSON.stringify(results, null, 2), "success");
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -102,8 +102,9 @@ CREATE TABLE IF NOT EXISTS products (
 -- Create product_images table
 CREATE TABLE IF NOT EXISTS product_images (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    product_id INT NOT NULL,
+    product_id INT,
     image_url VARCHAR(500) NOT NULL,
+    thumbnail_url VARCHAR(500),
     alt_text VARCHAR(255),
     sort_order INT DEFAULT 0,
     is_primary BOOLEAN DEFAULT FALSE,
