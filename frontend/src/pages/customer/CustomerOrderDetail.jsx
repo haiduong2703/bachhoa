@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { formatPrice } from '../../data/mockData'
 import { useAuthStore } from '../../store/authStore'
+import { orderAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const CustomerOrderDetail = () => {
@@ -32,10 +33,54 @@ const CustomerOrderDetail = () => {
     fetchOrderDetail()
   }, [id])
 
+  const createTimeline = (order) => {
+    const statuses = ['pending', 'confirmed', 'packing', 'shipping', 'delivered']
+    const statusLabels = {
+      pending: { title: 'Chờ xác nhận', description: 'Đơn hàng đang chờ xác nhận' },
+      confirmed: { title: 'Đã xác nhận', description: 'Đơn hàng đã được xác nhận' },
+      packing: { title: 'Đang đóng gói', description: 'Đơn hàng đang được đóng gói' },
+      shipping: { title: 'Đang giao hàng', description: 'Đơn hàng đang trên đường giao' },
+      delivered: { title: 'Đã giao hàng', description: 'Đơn hàng đã được giao thành công' }
+    }
+    
+    const currentIndex = statuses.indexOf(order.status)
+    
+    return statuses.map((status, index) => ({
+      status,
+      title: statusLabels[status].title,
+      description: statusLabels[status].description,
+      completed: index <= currentIndex,
+      timestamp: index <= currentIndex ? order.updatedAt || order.createdAt : null
+    }))
+  }
+
   const fetchOrderDetail = async () => {
     try {
       setIsLoading(true)
-      // Mock data - in real app, fetch from API
+      
+      const response = await orderAPI.getOrder(id)
+      
+      if (response.data.status === 'success') {
+        const orderData = response.data.data.order
+        
+        // Parse JSON fields if they are strings
+        if (typeof orderData.shippingAddress === 'string') {
+          orderData.shippingAddress = JSON.parse(orderData.shippingAddress)
+        }
+        if (typeof orderData.billingAddress === 'string') {
+          orderData.billingAddress = JSON.parse(orderData.billingAddress)
+        }
+        
+        // Create timeline from order status
+        const timeline = createTimeline(orderData)
+        
+        setOrder({
+          ...orderData,
+          timeline
+        })
+      }
+      
+      /* Mock data for reference:
       const mockOrder = {
         id: 1,
         orderNumber: 'BH1755847565747001',
@@ -126,8 +171,8 @@ const CustomerOrderDetail = () => {
         canReorder: true,
         canReview: true
       }
-
-      setOrder(mockOrder)
+      */
+      
     } catch (error) {
       console.error('Failed to fetch order detail:', error)
       toast.error('Không thể tải thông tin đơn hàng')
@@ -290,7 +335,7 @@ const CustomerOrderDetail = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Trạng thái đơn hàng</h2>
             <div>
-              {order.timeline.map((item, index) => (
+              {order.timeline?.map((item, index) => (
                 <TimelineItem
                   key={item.status}
                   item={item}
@@ -304,29 +349,29 @@ const CustomerOrderDetail = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Sản phẩm đã đặt</h2>
             <div className="space-y-4">
-              {order.items.map(item => (
+              {order.items?.map(item => (
                 <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
                   <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      src={item.image || '/placeholder-product.jpg'}
-                      alt={item.name}
+                      src={item.product?.images?.[0]?.imageUrl || '/placeholder-product.jpg'}
+                      alt={item.product?.name || item.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.name}</h3>
+                    <h3 className="font-medium text-gray-900">{item.product?.name || item.name}</h3>
                     <p className="text-sm text-gray-500">
-                      {formatPrice(item.price)} x {item.quantity}
+                      {formatPrice(Number(item.unitPrice))} x {item.quantity}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">
-                      {formatPrice(item.total)}
+                      {formatPrice(Number(item.unitPrice) * item.quantity)}
                     </p>
-                    {item.canReview && order.status === 'delivered' && (
+                    {order.status === 'delivered' && (
                       <Link
                         to={`/customer/reviews/create?product=${item.productId}&order=${order.id}`}
-                        className="text-sm text-blue-600 hover:text-blue-700 flex items-center mt-1"
+                        className="text-sm text-blue-600 hover:text-blue-700 flex items-center justify-end mt-1"
                       >
                         <Star className="w-3 h-3 mr-1" />
                         Đánh giá
@@ -398,32 +443,32 @@ const CustomerOrderDetail = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Tạm tính:</span>
-                <span className="font-medium">{formatPrice(order.subtotal)}</span>
+                <span className="font-medium">{formatPrice(Number(order.subtotal))}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-600">Phí vận chuyển:</span>
-                <span className="font-medium">{formatPrice(order.shippingFee)}</span>
+                <span className="font-medium">{formatPrice(Number(order.shippingAmount || 0))}</span>
               </div>
 
-              {order.discount > 0 && (
+              {order.discountAmount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Giảm giá:</span>
-                  <span>-{formatPrice(order.discount)}</span>
+                  <span>-{formatPrice(Number(order.discountAmount))}</span>
                 </div>
               )}
 
-              {order.tax > 0 && (
+              {order.taxAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Thuế:</span>
-                  <span className="font-medium">{formatPrice(order.tax)}</span>
+                  <span className="font-medium">{formatPrice(Number(order.taxAmount))}</span>
                 </div>
               )}
 
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Tổng cộng:</span>
-                  <span className="text-green-600">{formatPrice(order.total)}</span>
+                  <span className="text-green-600">{formatPrice(Number(order.totalAmount))}</span>
                 </div>
               </div>
             </div>

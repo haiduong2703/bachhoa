@@ -239,6 +239,56 @@ class UploadService {
   }
 
   /**
+   * Upload and process category image
+   */
+  async uploadCategoryImage(file) {
+    try {
+      const tempDir = path.join(this.uploadPath, "categories");
+      await fs.mkdir(tempDir, { recursive: true });
+
+      const baseName = path.parse(file.filename).name;
+
+      // Create variants (same as products)
+      const variants = {};
+      const sizes = {
+        thumbnail: { width: 150, height: 150, quality: 70 },
+        small: { width: 300, height: 300, quality: 75 },
+        medium: { width: 600, height: 600, quality: 80 },
+        large: { width: 1200, height: 1200, quality: 85 },
+      };
+
+      for (const [size, options] of Object.entries(sizes)) {
+        const outputPath = path.join(tempDir, `${baseName}-${size}.jpg`);
+
+        await this.processImage(file.path, outputPath, {
+          width: options.width,
+          height: options.height,
+          quality: options.quality,
+          format: "jpeg",
+        });
+
+        variants[size] = {
+          path: outputPath,
+          url: `/uploads/categories/${baseName}-${size}.jpg`,
+        };
+      }
+
+      // Clean up original file
+      await fs.unlink(file.path);
+
+      return {
+        original: file.originalname,
+        variants,
+        primary: variants.medium || variants.large,
+        thumbnail: variants.thumbnail,
+      };
+    } catch (error) {
+      console.error("Failed to process category image:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Upload and process product images (multiple)
    */
   async uploadProductImages(files, productId) {
@@ -304,34 +354,6 @@ class UploadService {
     return {
       path: outputPath,
       url: `/uploads/users/${userId}/avatar.jpg`,
-    };
-  }
-
-  /**
-   * Upload category image
-   */
-  async uploadCategoryImage(file, categoryId) {
-    const categoryDir = path.join(
-      this.uploadPath,
-      "categories",
-      categoryId.toString()
-    );
-    await fs.mkdir(categoryDir, { recursive: true });
-
-    const baseName = path.parse(file.filename).name;
-    const variants = await this.createImageVariants(
-      file.path,
-      categoryDir,
-      baseName
-    );
-
-    // Clean up original file
-    await fs.unlink(file.path);
-
-    return {
-      variants,
-      primary: variants.medium || variants.large,
-      thumbnail: variants.thumbnail,
     };
   }
 

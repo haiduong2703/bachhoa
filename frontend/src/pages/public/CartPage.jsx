@@ -202,10 +202,10 @@ const CartPage = () => {
                 </div>
               )}
 
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-600">Phí vận chuyển:</span>
                 <span className="font-medium">Miễn phí</span>
-              </div>
+              </div> */}
 
               <hr className="border-gray-200" />
 

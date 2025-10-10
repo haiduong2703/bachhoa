@@ -1,5 +1,6 @@
-import { Category } from '../models/index.js';
+import { Category, Product } from '../models/index.js';
 import { Op } from 'sequelize';
+import sequelize from '../database/config.js';
 
 // Get all categories
 export const getCategories = async (req, res) => {
@@ -32,7 +33,8 @@ export const getCategories = async (req, res) => {
     };
   }
 
-  const { count, rows: categories } = await Category.findAndCountAll({
+  // Get categories with product count
+  const categories = await Category.findAll({
     where: whereClause,
     limit: parseInt(limit),
     offset: parseInt(offset),
@@ -44,8 +46,30 @@ export const getCategories = async (req, res) => {
         where: { status: 'active' },
         required: false,
         order: [['sortOrder', 'ASC'], ['name', 'ASC']]
+      },
+      {
+        model: Product,
+        as: 'products',
+        attributes: [],
+        required: false,
+        through: { attributes: [] }
       }
-    ]
+    ],
+    attributes: {
+      include: [
+        [
+          sequelize.fn('COUNT', sequelize.fn('DISTINCT', sequelize.col('products.id'))),
+          'productCount'
+        ]
+      ]
+    },
+    group: ['Category.id', 'children.id'],
+    subQuery: false
+  });
+
+  // Get total count without pagination
+  const count = await Category.count({
+    where: whereClause
   });
 
   const totalPages = Math.ceil(count / limit);

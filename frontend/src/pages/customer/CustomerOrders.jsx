@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { formatPrice } from '../../data/mockData'
 import { useAuthStore } from '../../store/authStore'
+import { orderAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const CustomerOrders = () => {
@@ -30,40 +31,41 @@ const CustomerOrders = () => {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [statusFilter, sortBy, sortOrder])
+  
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (searchQuery !== undefined) {
+        fetchOrders()
+      }
+    }, 500)
+    
+    return () => clearTimeout(delayDebounce)
+  }, [searchQuery])
 
   const fetchOrders = async () => {
     try {
       setIsLoading(true)
-      // Real data from database - customer's orders
-      const customerOrders = [
-        {
-          id: 1,
-          orderNumber: 'BH1755847565747001',
-          status: 'delivered',
-          total: 187000,
-          itemCount: 2,
-          created_at: '2025-08-22T00:26:05.000Z',
-          shippingAddress: {
-            recipientName: 'Khách Hàng',
-            recipientPhone: '0123456787',
-            addressLine1: '123 Đường ABC',
-            ward: 'Phường 1',
-            district: 'Quận 1',
-            city: 'TP.HCM'
-          },
-          paymentMethod: 'cod',
-          paymentStatus: 'paid',
-          items: [
-            { id: 1, name: 'Cà chua bi', quantity: 2, price: 25000, image: 'https://images.unsplash.com/photo-1546470427-e5ac89cd0b31?w=400' },
-            { id: 2, name: 'Thịt ba chỉ', quantity: 1, price: 120000, image: 'https://images.unsplash.com/photo-1588347818111-d3b9b4d0c9b5?w=400' }
-          ],
-          deliveredAt: '2025-08-22T10:30:00.000Z',
-          canReview: true,
-          canReorder: true
-        }
-      ]
-      setOrders(customerOrders)
+      const params = {
+        page: 1,
+        limit: 100, // Get all orders for now
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      }
+      
+      if (statusFilter) {
+        params.status = statusFilter
+      }
+      
+      if (searchQuery) {
+        params.search = searchQuery
+      }
+      
+      const response = await orderAPI.getMyOrders(params)
+      
+      if (response.data.status === 'success') {
+        setOrders(response.data.data.orders)
+      }
     } catch (error) {
       console.error('Failed to fetch orders:', error)
       toast.error('Không thể tải danh sách đơn hàng')
@@ -155,7 +157,15 @@ const CustomerOrders = () => {
   }
 
   const canCancelOrder = (status) => {
-    return ['pending', 'processing'].includes(status)
+    return ['pending', 'confirmed'].includes(status)
+  }
+  
+  const canReviewOrder = (order) => {
+    return order.status === 'delivered'
+  }
+  
+  const canReorderOrder = (order) => {
+    return ['delivered', 'cancelled'].includes(order.status)
   }
 
   const OrderCard = ({ order }) => (
@@ -182,7 +192,7 @@ const CustomerOrders = () => {
         <div className="text-right">
           {getStatusBadge(order.status)}
           <div className="text-lg font-bold text-gray-900 mt-1">
-            {formatPrice(order.total)}
+            {formatPrice(order.totalAmount)}
           </div>
         </div>
       </div>
@@ -194,13 +204,13 @@ const CustomerOrders = () => {
             <div key={index} className="flex items-center space-x-2 bg-gray-50 rounded-lg p-2 min-w-0">
               <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                 <img
-                  src={item.image || '/placeholder-product.jpg'}
-                  alt={item.name}
+                  src={item.product?.images?.[0]?.imageUrl || '/placeholder-product.jpg'}
+                  alt={item.product?.name || 'Product'}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{item.product?.name}</p>
                 <p className="text-xs text-gray-500">x{item.quantity}</p>
               </div>
             </div>
@@ -254,7 +264,7 @@ const CustomerOrders = () => {
             <span>Chi tiết</span>
           </Link>
 
-          {order.canReorder && (
+          {canReorderOrder(order) && (
             <button
               onClick={() => handleReorder(order)}
               className="btn btn-outline btn-sm flex items-center space-x-2"
@@ -266,7 +276,7 @@ const CustomerOrders = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          {order.canReview && order.status === 'delivered' && (
+          {canReviewOrder(order) && (
             <Link
               to={`/customer/reviews/create?order=${order.id}`}
               className="btn btn-primary btn-sm flex items-center space-x-2"
@@ -386,7 +396,7 @@ const CustomerOrders = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Tổng chi tiêu</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatPrice(orders.reduce((sum, order) => sum + order.total, 0))}
+                {formatPrice(orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0))}
               </p>
             </div>
           </div>

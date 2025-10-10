@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { useCartStore } from '../../store/cartStore'
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react'
+import { Search, ShoppingCart, User, Menu, X, Settings } from 'lucide-react'
 import logo from "../../asset/icon.png"
 const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
   const { user, isAuthenticated, logout } = useAuthStore()
@@ -10,6 +10,10 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
   const cartItemCount = getItemCount()
+  
+  // Debug: Log user role
+  console.log('👤 Current user:', user)
+  console.log('👤 User role:', user?.role)
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -106,8 +110,23 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
                 </button>
                 
                 {/* Dropdown Menu */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="py-2">
+                    {/* Admin/Staff Menu */}
+                    {(user?.role === 'admin' || user?.role === 'staff') && (
+                      <>
+                        <Link
+                          to={user?.role === 'admin' ? '/admin' : '/staff'}
+                          className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                        >
+                          <Settings className="w-4 h-4 mr-2" />
+                          Quản trị website
+                        </Link>
+                        <hr className="my-1" />
+                      </>
+                    )}
+                    
+                    {/* Customer Menu */}
                     <Link
                       to="/customer"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

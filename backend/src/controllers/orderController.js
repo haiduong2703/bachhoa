@@ -1,4 +1,4 @@
-import { Order, OrderItem, Product, User, Inventory } from '../models/index.js';
+import { Order, OrderItem, Product, User, Inventory, ProductImage } from '../models/index.js';
 import { catchAsync, ValidationError, NotFoundError } from '../utils/errors.js';
 import { Op } from 'sequelize';
 import sequelize from '../database/config.js';
@@ -30,7 +30,11 @@ export const getOrders = catchAsync(async (req, res) => {
     where.paymentStatus = paymentStatus;
   }
 
-  if (userId) {
+  // If user is customer, only show their orders
+  // If user is staff/admin and userId is provided, filter by that userId
+  if (req.user.role === 'customer') {
+    where.userId = req.user.id;
+  } else if (userId) {
     where.userId = userId;
   }
 
@@ -58,7 +62,16 @@ export const getOrders = catchAsync(async (req, res) => {
           {
             model: Product,
             as: 'product',
-            attributes: ['id', 'name', 'sku', 'price']
+            attributes: ['id', 'name', 'sku', 'price', 'slug'],
+            include: [
+              {
+                model: ProductImage,
+                as: 'images',
+                where: { isPrimary: true },
+                required: false,
+                limit: 1
+              }
+            ]
           }
         ]
       }
@@ -107,7 +120,16 @@ export const getOrder = catchAsync(async (req, res) => {
           {
             model: Product,
             as: 'product',
-            attributes: ['id', 'name', 'sku', 'price', 'images']
+            attributes: ['id', 'name', 'sku', 'price', 'slug'],
+            include: [
+              {
+                model: ProductImage,
+                as: 'images',
+                where: { isPrimary: true },
+                required: false,
+                limit: 1
+              }
+            ]
           }
         ]
       }
@@ -250,8 +272,12 @@ export const createOrder = catchAsync(async (req, res) => {
       );
     }
 
+    // Generate unique order number
+    const orderNumber = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
+
     // Create order
     const order = await Order.create({
+      orderNumber,
       userId: user.id,
       status: 'pending',
       paymentStatus: 'unpaid',

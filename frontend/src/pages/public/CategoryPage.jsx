@@ -10,9 +10,9 @@ const CategoryPage = () => {
     fetchCategories()
   }, [fetchCategories])
 
-  // Get product count for each category (placeholder for now)
-  const getCategoryProductCount = (categoryName) => {
-    return Math.floor(Math.random() * 50) + 1 // Random count for demo
+  // Get product count for each category
+  const getCategoryProductCount = (category) => {
+    return category.productCount || 0
   }
 
   return (
@@ -50,7 +50,7 @@ const CategoryPage = () => {
               {(categories || []).map((category) => (
               <div key={category.id} className="group">
                 <Link
-                  to={`/products?category=${encodeURIComponent(category.name)}`}
+                  to={`/products?categoryId=${category.id}`}
                   className="block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group-hover:transform group-hover:scale-105"
                 >
                   {/* Category Image */}
@@ -67,7 +67,7 @@ const CategoryPage = () => {
                       <div className="flex items-center space-x-1">
                         <Package className="w-4 h-4 text-blue-600" />
                         <span className="text-sm font-medium text-gray-900">
-                          {getCategoryProductCount(category.name)} sản phẩm
+                          {getCategoryProductCount(category)} sản phẩm
                         </span>
                       </div>
                     </div>

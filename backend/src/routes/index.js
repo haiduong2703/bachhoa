@@ -7,6 +7,7 @@ import userRoutes from './users.js';
 import uploadRoutes from './uploads.js';
 import couponRoutes from './coupons.js';
 import statsRoutes from './stats.js';
+import reviewRoutes from './reviews.js';
 
 const router = express.Router();
 
@@ -26,34 +27,13 @@ router.get('/health', (req, res) => {
 // Mount routes
 router.use(`${API_VERSION}/auth`, authRoutes);
 router.use(`${API_VERSION}/products`, productRoutes);
-// Simple categories endpoint
-router.get(`${API_VERSION}/categories`, async (req, res) => {
-  try {
-    const { Category } = await import('../models/index.js');
-    const categories = await Category.findAll({
-      where: { status: 'active' },
-      order: [['sortOrder', 'ASC'], ['name', 'ASC']]
-    });
-
-    res.json({
-      status: 'success',
-      data: {
-        categories
-      }
-    });
-  } catch (error) {
-    console.error('Categories error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch categories'
-    });
-  }
-});
+router.use(`${API_VERSION}/categories`, categoryRoutes);
 router.use(`${API_VERSION}/orders`, orderRoutes);
 router.use(`${API_VERSION}/users`, userRoutes);
 router.use(`${API_VERSION}/uploads`, uploadRoutes);
 router.use(`${API_VERSION}/coupons`, couponRoutes);
 router.use(`${API_VERSION}/stats`, statsRoutes);
+router.use(`${API_VERSION}/reviews`, reviewRoutes);
 
 // 404 handler for API routes
 router.use(`${API_VERSION}/*`, (req, res) => {

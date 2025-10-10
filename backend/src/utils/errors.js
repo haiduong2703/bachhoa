@@ -110,7 +110,14 @@ export const handleSequelizeError = (error) => {
   }
 
   if (error.name === 'SequelizeDatabaseError') {
-    return new DatabaseError('Database operation failed');
+    // Log detailed error for debugging
+    console.error('💥 SequelizeDatabaseError:', {
+      message: error.message,
+      sql: error.sql,
+      parameters: error.parameters,
+      original: error.original?.message
+    });
+    return new DatabaseError(error.original?.message || error.message || 'Database operation failed');
   }
 
   return error;

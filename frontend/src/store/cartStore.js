@@ -157,31 +157,33 @@ const useCartStore = create(
 
       applyCoupon: async (couponCode) => {
         try {
-          const { isAuthenticated } = useAuthStore.getState()
-
-          if (isAuthenticated) {
-            // Use server-side cart for authenticated users
-            await cartAPI.applyCoupon(couponCode)
-            await get().fetchCart()
-          } else {
-            // Validate coupon for guest users
-            const response = await couponsAPI.validate(couponCode)
-            const coupon = response.data.coupon
-
-            const subtotal = get().getSubtotal()
-
-            if (subtotal < coupon.minimumOrderAmount) {
-              toast.error(`Đơn hàng tối thiểu ${coupon.minimumOrderAmount.toLocaleString('vi-VN')}đ`)
-              return false
-            }
-
-            set({ coupon })
+          console.log('🎫 Applying coupon:', couponCode)
+          
+          // Validate coupon (works for both guest and authenticated users)
+          // Since we're using local storage cart, we don't need server-side cart API
+          const response = await couponsAPI.validateCoupon(couponCode)
+          console.log('🎫 Coupon validation response:', response.data)
+          
+          const couponData = response.data.data?.coupon || response.data.coupon
+          
+          if (!couponData) {
+            toast.error('Mã giảm giá không hợp lệ')
+            return false
           }
 
+          const subtotal = get().getSubtotal()
+
+          if (couponData.minimumOrderAmount && subtotal < couponData.minimumOrderAmount) {
+            toast.error(`Đơn hàng tối thiểu ${Number(couponData.minimumOrderAmount).toLocaleString('vi-VN')}đ`)
+            return false
+          }
+
+          set({ coupon: couponData })
           toast.success('Áp dụng mã giảm giá thành công')
           return true
         } catch (error) {
-          console.error('Failed to apply coupon:', error)
+          console.error('❌ Failed to apply coupon:', error)
+          console.error('❌ Error response:', error.response?.data)
           toast.error(error.response?.data?.message || 'Mã giảm giá không hợp lệ')
           return false
         }
@@ -189,17 +191,8 @@ const useCartStore = create(
 
       removeCoupon: async () => {
         try {
-          const { isAuthenticated } = useAuthStore.getState()
-
-          if (isAuthenticated) {
-            // Use server-side cart for authenticated users
-            await cartAPI.removeCoupon()
-            await get().fetchCart()
-          } else {
-            // Use local storage for guest users
-            set({ coupon: null })
-          }
-
+          // Since we're using local storage cart, just remove from state
+          set({ coupon: null })
           toast.success('Đã hủy mã giảm giá')
         } catch (error) {
           console.error('Failed to remove coupon:', error)

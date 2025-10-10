@@ -22,7 +22,18 @@ const Category = sequelize.define('Category', {
   },
   image: {
     type: DataTypes.STRING(500),
-    allowNull: true
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('image');
+      if (!rawValue) return null;
+      // If already a full URL, return as is
+      if (rawValue.startsWith('http://') || rawValue.startsWith('https://')) {
+        return rawValue;
+      }
+      // Convert relative path to full URL
+      const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+      return `${baseUrl}${rawValue}`;
+    }
   },
   parentId: {
     type: DataTypes.INTEGER,

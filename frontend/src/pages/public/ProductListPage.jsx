@@ -24,18 +24,23 @@ const ProductListPage = () => {
 
   // Initialize filters from URL params and fetch data
   useEffect(() => {
-    const categoryParam = searchParams.get('category')
+    const categoryParam = searchParams.get('categoryId') // Changed from 'category' to 'categoryId'
     const searchParam = searchParams.get('q')
     const sortParam = searchParams.get('sort')
 
-    const newFilters = {}
+    const newFilters = {
+      category: null, // Reset category by default
+      search: '',     // Reset search by default
+    }
 
     if (categoryParam) {
-      newFilters.category = categoryParam
+      newFilters.category = categoryParam // Backend expects 'category' param with ID value
     }
     if (searchParam) {
       newFilters.search = searchParam
       setSearchInput(searchParam) // Set search input from URL
+    } else {
+      setSearchInput('') // Clear search input if no query param
     }
     if (sortParam) {
       const [sortBy, sortOrder] = sortParam.split('-')
@@ -43,9 +48,8 @@ const ProductListPage = () => {
       newFilters.sortOrder = sortOrder || 'asc'
     }
 
-    if (Object.keys(newFilters).length > 0) {
-      updateFilters(newFilters)
-    }
+    // Always update filters to ensure they match URL params
+    updateFilters(newFilters)
   }, [searchParams, updateFilters])
 
   // Fetch products when non-search filters change
@@ -121,14 +125,15 @@ const ProductListPage = () => {
 
   const handleCategoryChange = (value) => {
     console.log('ProductListPage: handleCategoryChange called with value:', value)
-    updateFilters({ category: value === 'all' ? null : value })
+    // Empty string means "All categories"
+    updateFilters({ category: value || null })
 
-    // Update URL
+    // Update URL - use categoryId param
     const newParams = new URLSearchParams(searchParams)
-    if (value && value !== 'all') {
-      newParams.set('category', value)
+    if (value) {
+      newParams.set('categoryId', value) // Changed to categoryId
     } else {
-      newParams.delete('category')
+      newParams.delete('categoryId') // Changed to categoryId
     }
     setSearchParams(newParams)
 
@@ -198,11 +203,11 @@ const ProductListPage = () => {
           <div className="flex items-center gap-4">
             {/* Category Filter */}
             <select
-              value={filters.category || 'all'}
+              value={filters.category || ''}
               onChange={(e) => handleCategoryChange(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="all">Tất cả danh mục</option>
+              <option value="">Tất cả danh mục</option>
               {(categories || []).map(category => (
                 <option key={category.id} value={category.id}>
                   {category.name}

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
-
+import logo from "../../asset/icon.png"
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">
@@ -9,9 +9,9 @@ const Footer = () => {
           {/* Company Info */}
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">BH</span>
-              </div>
+               <div className="w-8 h-8  rounded-lg flex items-center justify-center">
+                            <img src={logo} alt="Logo" />
+                          </div>
               <span className="text-xl font-bold">Bach Hoa Store</span>
             </div>
             <p className="text-gray-300 mb-4">

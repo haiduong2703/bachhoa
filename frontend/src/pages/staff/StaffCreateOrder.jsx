@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import useProductStore from '../../store/productStore'
 import { formatPrice } from '../../data/mockData'
-import { ordersAPI } from '../../services/api'
+import { orderAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const StaffCreateOrder = () => {
@@ -157,7 +157,7 @@ const StaffCreateOrder = () => {
       console.log('Creating order:', orderData)
 
       // Call real API
-      const response = await ordersAPI.createOrder(orderData)
+      const response = await orderAPI.createOrder(orderData)
       console.log('Order created:', response.data)
 
       toast.success('Tạo đơn hàng thành công!')

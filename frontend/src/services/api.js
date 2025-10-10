@@ -130,15 +130,6 @@ export const categoriesAPI = {
 }
 
 // Orders API
-export const ordersAPI = {
-  getOrders: (params) => api.get('/orders', { params }),
-  getOrder: (id) => api.get(`/orders/${id}`),
-  createOrder: (data) => api.post('/orders', data),
-  updateOrderStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
-  cancelOrder: (id, reason) => api.patch(`/orders/${id}/cancel`, { reason }),
-  trackOrder: (orderNumber) => api.get(`/orders/track/${orderNumber}`),
-}
-
 // Cart API
 export const cartAPI = {
   getCart: () => api.get('/cart'),
@@ -254,6 +245,34 @@ export const searchAPI = {
   search: (query, params) => api.get('/search', { params: { q: query, ...params } }),
   getSearchSuggestions: (query) => api.get('/search/suggestions', { params: { q: query } }),
   getPopularSearches: () => api.get('/search/popular'),
+}
+
+// Order API
+export const orderAPI = {
+  getMyOrders: (params) => api.get('/orders', { params }),
+  getOrder: (id) => api.get(`/orders/${id}`),
+  createOrder: (data) => api.post('/orders', data),
+  cancelOrder: (id) => api.patch(`/orders/${id}/cancel`),
+  // Admin/Staff
+  getAllOrders: (params) => api.get('/orders', { params }),
+  updateOrderStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
+  updatePaymentStatus: (id, paymentStatus) => api.patch(`/orders/${id}/payment-status`, { paymentStatus }),
+}
+
+// Review API
+export const reviewAPI = {
+  getProductReviews: (productId, params) => api.get(`/reviews/products/${productId}/reviews`, { params }),
+  createReview: (data) => api.post('/reviews', data),
+  updateReview: (id, data) => api.put(`/reviews/${id}`, data),
+  deleteReview: (id) => api.delete(`/reviews/${id}`),
+  markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
+  getMyReviews: (params) => api.get('/reviews/my-reviews', { params }),
+  canReview: (productId) => api.get(`/reviews/can-review/${productId}`),
+  // Admin
+  getAllReviews: (params) => api.get('/reviews/admin/all', { params }),
+  approveReview: (id) => api.patch(`/reviews/admin/${id}/approve`),
+  rejectReview: (id) => api.patch(`/reviews/admin/${id}/reject`),
+  adminDeleteReview: (id) => api.delete(`/reviews/admin/${id}`),
 }
 
 export default api

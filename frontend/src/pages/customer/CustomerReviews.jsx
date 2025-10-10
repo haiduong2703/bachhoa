@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { formatPrice } from '../../data/mockData'
 import { useAuthStore } from '../../store/authStore'
+import { reviewAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const CustomerReviews = () => {
@@ -29,11 +30,11 @@ const CustomerReviews = () => {
   const fetchReviews = async () => {
     try {
       setIsLoading(true)
-      // Mock data - in real app, fetch from API
-      const mockReviews = [
-        // No reviews yet - customer hasn't reviewed any products
-      ]
-      setReviews(mockReviews)
+      const response = await reviewAPI.getMyReviews()
+      
+      if (response.data.status === 'success') {
+        setReviews(response.data.data.reviews)
+      }
     } catch (error) {
       console.error('Failed to fetch reviews:', error)
       toast.error('Không thể tải danh sách đánh giá')
@@ -46,9 +47,11 @@ const CustomerReviews = () => {
     if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) return
 
     try {
+      await reviewAPI.deleteReview(reviewId)
       setReviews(reviews.filter(review => review.id !== reviewId))
       toast.success('Xóa đánh giá thành công')
     } catch (error) {
+      console.error('Failed to delete review:', error)
       toast.error('Không thể xóa đánh giá')
     }
   }
@@ -56,7 +59,8 @@ const CustomerReviews = () => {
   const filteredReviews = reviews.filter(review => {
     if (filter === 'all') return true
     if (filter === 'pending') return review.status === 'pending'
-    if (filter === 'published') return review.status === 'published'
+    if (filter === 'approved') return review.status === 'approved'
+    if (filter === 'rejected') return review.status === 'rejected'
     return true
   })
 
@@ -87,13 +91,13 @@ const CustomerReviews = () => {
         <div className="flex items-start space-x-4">
           <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={review.product.image || '/placeholder-product.jpg'}
-              alt={review.product.name}
+              src={review.product?.images?.[0]?.imageUrl || '/placeholder-product.jpg'}
+              alt={review.product?.name}
               className="w-full h-full object-cover"
             />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">{review.product.name}</h3>
+            <h3 className="font-semibold text-gray-900">{review.product?.name}</h3>
             <div className="flex items-center mt-1">
               {renderStars(review.rating)}
               <span className="ml-2 text-sm text-gray-600">({review.rating}/5)</span>
@@ -107,11 +111,17 @@ const CustomerReviews = () => {
 
         <div className="flex items-center space-x-2">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            review.status === 'published'
+            review.status === 'approved'
               ? 'bg-green-100 text-green-800'
+              : review.status === 'rejected'
+              ? 'bg-red-100 text-red-800'
               : 'bg-yellow-100 text-yellow-800'
           }`}>
-            {review.status === 'published' ? 'Đã đăng' : 'Chờ duyệt'}
+            {review.status === 'approved' 
+              ? 'Đã duyệt' 
+              : review.status === 'rejected'
+              ? 'Từ chối'
+              : 'Chờ duyệt'}
           </span>
 
           <button
@@ -202,14 +212,14 @@ const CustomerReviews = () => {
               Tất cả ({reviews.length})
             </button>
             <button
-              onClick={() => setFilter('published')}
+              onClick={() => setFilter('approved')}
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                filter === 'published'
+                filter === 'approved'
                   ? 'bg-blue-100 text-blue-800'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              Đã đăng ({reviews.filter(r => r.status === 'published').length})
+              Đã duyệt ({reviews.filter(r => r.status === 'approved').length})
             </button>
             <button
               onClick={() => setFilter('pending')}
@@ -220,6 +230,16 @@ const CustomerReviews = () => {
               }`}
             >
               Chờ duyệt ({reviews.filter(r => r.status === 'pending').length})
+            </button>
+            <button
+              onClick={() => setFilter('rejected')}
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                filter === 'rejected'
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Từ chối ({reviews.filter(r => r.status === 'rejected').length})
             </button>
           </div>
         </div>

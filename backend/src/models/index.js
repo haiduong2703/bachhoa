@@ -5,6 +5,7 @@ import Product from "./Product.js";
 import Category from "./Category.js";
 import Order from "./Order.js";
 import Coupon from "./Coupon.js";
+import Review from "./Review.js";
 
 // Import other models
 import { DataTypes } from "sequelize";
@@ -410,6 +411,32 @@ Product.hasMany(OrderItem, {
   as: "orderItems",
 });
 
+// Review associations
+Review.belongsTo(Product, {
+  foreignKey: "productId",
+  as: "product",
+});
+
+Review.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+Review.belongsTo(Order, {
+  foreignKey: "orderId",
+  as: "order",
+});
+
+Product.hasMany(Review, {
+  foreignKey: "productId",
+  as: "reviews",
+});
+
+User.hasMany(Review, {
+  foreignKey: "userId",
+  as: "reviews",
+});
+
 // Export all models
 export {
   sequelize,
@@ -425,6 +452,7 @@ export {
   Order,
   OrderItem,
   Coupon,
+  Review,
 };
 
 export default {
@@ -441,4 +469,5 @@ export default {
   Order,
   OrderItem,
   Coupon,
+  Review,
 };

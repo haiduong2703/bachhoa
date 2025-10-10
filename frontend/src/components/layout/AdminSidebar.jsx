@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Tag,
   Ticket,
+  Star,
   FileText,
   Settings,
   X
@@ -56,6 +57,11 @@ const AdminSidebar = ({ onClose }) => {
       icon: Ticket
     },
     {
+      label: 'Đánh giá',
+      path: '/admin/reviews',
+      icon: Star
+    },
+    {
       label: 'Báo cáo',
       path: '/admin/reports',
       icon: FileText
@@ -80,12 +86,12 @@ const AdminSidebar = ({ onClose }) => {
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center space-x-2 mb-2">
+            {/* <div className="flex items-center space-x-2 mb-2">
               <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">BH</span>
               </div>
               <span className="text-lg font-bold text-gray-900">Admin Panel</span>
-            </div>
+            </div> */}
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium text-sm">

@@ -156,7 +156,6 @@ typings/
 .vscode-test
 
 # Uploads
-uploads/
 !uploads/.gitkeep
 
 # Database

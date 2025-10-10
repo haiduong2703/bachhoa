@@ -37,6 +37,7 @@ import CustomerProfile from './pages/customer/CustomerProfile'
 import CustomerOrders from './pages/customer/CustomerOrders'
 import CustomerOrderDetail from './pages/customer/CustomerOrderDetail'
 import CustomerReviews from './pages/customer/CustomerReviews'
+import CustomerCreateReview from './pages/customer/CustomerCreateReview'
 import CustomerAddresses from './pages/customer/CustomerAddresses'
 
 // Staff Pages
@@ -57,6 +58,7 @@ import AdminOrders from './pages/admin/AdminOrders'
 import AdminOrderDetail from './pages/admin/AdminOrderDetail'
 import AdminCoupons from './pages/admin/AdminCoupons'
 import AdminReports from './pages/admin/AdminReports'
+import AdminReviews from './pages/admin/AdminReviews'
 import AdminSettings from './pages/admin/AdminSettings'
 
 // Components
@@ -137,6 +139,7 @@ function App() {
         <Route path="addresses" element={<CustomerAddresses />} />
         <Route path="orders" element={<CustomerOrders />} />
         <Route path="orders/:id" element={<CustomerOrderDetail />} />
+        <Route path="reviews/create" element={<CustomerCreateReview />} />
         <Route path="reviews" element={<CustomerReviews />} />
       </Route>
 
@@ -175,6 +178,7 @@ function App() {
         <Route path="orders" element={<AdminOrders />} />
         <Route path="orders/:id" element={<AdminOrderDetail />} />
         <Route path="coupons" element={<AdminCoupons />} />
+        <Route path="reviews" element={<AdminReviews />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>

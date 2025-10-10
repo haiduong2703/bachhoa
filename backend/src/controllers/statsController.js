@@ -17,10 +17,10 @@ import sequelize from '../database/config.js';
 export const getDashboardStats = catchAsync(async (req, res) => {
   console.log('📊 Fetching dashboard statistics...');
 
-  // 1. Total Users (excluding admin accounts)
+  // 1. Total Users (all users in the system)
   const totalUsers = await User.count({
     where: {
-      roleId: { [Op.ne]: 1 } // Not admin role
+      status: 'active'
     }
   });
 
@@ -35,7 +35,7 @@ export const getDashboardStats = catchAsync(async (req, res) => {
   // 4. Total Revenue (from completed orders)
   const revenueResult = await Order.findOne({
     attributes: [
-      [sequelize.fn('SUM', sequelize.col('totalAmount')), 'totalRevenue']
+      [sequelize.fn('SUM', sequelize.col('total_amount')), 'totalRevenue']
     ],
     where: {
       status: {
@@ -50,7 +50,7 @@ export const getDashboardStats = catchAsync(async (req, res) => {
   const pendingOrders = await Order.count({
     where: {
       status: {
-        [Op.in]: ['pending', 'processing']
+        [Op.in]: ['pending', 'confirmed', 'packing']
       }
     }
   });
@@ -70,7 +70,7 @@ export const getDashboardStats = catchAsync(async (req, res) => {
 
   const recentOrders = await Order.count({
     where: {
-      createdAt: {
+      created_at: {
         [Op.gte]: thirtyDaysAgo
       }
     }
@@ -78,13 +78,13 @@ export const getDashboardStats = catchAsync(async (req, res) => {
 
   const recentRevenue = await Order.findOne({
     attributes: [
-      [sequelize.fn('SUM', sequelize.col('totalAmount')), 'revenue']
+      [sequelize.fn('SUM', sequelize.col('total_amount')), 'revenue']
     ],
     where: {
       status: {
         [Op.in]: ['completed', 'delivered']
       },
-      createdAt: {
+      created_at: {
         [Op.gte]: thirtyDaysAgo
       }
     },
@@ -97,13 +97,13 @@ export const getDashboardStats = catchAsync(async (req, res) => {
 
   const previousMonthRevenue = await Order.findOne({
     attributes: [
-      [sequelize.fn('SUM', sequelize.col('totalAmount')), 'revenue']
+      [sequelize.fn('SUM', sequelize.col('total_amount')), 'revenue']
     ],
     where: {
       status: {
         [Op.in]: ['completed', 'delivered']
       },
-      createdAt: {
+      created_at: {
         [Op.between]: [sixtyDaysAgo, thirtyDaysAgo]
       }
     },
@@ -166,7 +166,7 @@ export const getSalesStats = catchAsync(async (req, res) => {
   };
 
   if (startDate && endDate) {
-    whereClause.createdAt = {
+    whereClause.created_at = {
       [Op.between]: [new Date(startDate), new Date(endDate)]
     };
   }
@@ -174,12 +174,12 @@ export const getSalesStats = catchAsync(async (req, res) => {
   const orders = await Order.findAll({
     where: whereClause,
     attributes: [
-      [sequelize.fn('DATE', sequelize.col('createdAt')), 'date'],
+      [sequelize.fn('DATE', sequelize.col('created_at')), 'date'],
       [sequelize.fn('COUNT', sequelize.col('id')), 'orderCount'],
-      [sequelize.fn('SUM', sequelize.col('totalAmount')), 'revenue']
+      [sequelize.fn('SUM', sequelize.col('total_amount')), 'revenue']
     ],
-    group: [sequelize.fn('DATE', sequelize.col('createdAt'))],
-    order: [[sequelize.fn('DATE', sequelize.col('createdAt')), 'DESC']],
+    group: [sequelize.fn('DATE', sequelize.col('created_at'))],
+    order: [[sequelize.fn('DATE', sequelize.col('created_at')), 'DESC']],
     raw: true
   });
 
@@ -203,7 +203,7 @@ export const getTopProducts = catchAsync(async (req, res) => {
     attributes: [
       'productId',
       [sequelize.fn('SUM', sequelize.col('quantity')), 'totalSold'],
-      [sequelize.fn('SUM', sequelize.col('price')), 'totalRevenue']
+      [sequelize.fn('SUM', sequelize.col('total_price')), 'totalRevenue']
     ],
     include: [
       {
@@ -212,7 +212,7 @@ export const getTopProducts = catchAsync(async (req, res) => {
         attributes: ['id', 'name', 'price', 'imageUrl']
       }
     ],
-    group: ['productId', 'product.id'],
+    group: ['OrderItem.product_id', 'product.id'],
     order: [[sequelize.fn('SUM', sequelize.col('quantity')), 'DESC']],
     limit: parseInt(limit),
     raw: false

@@ -35,22 +35,49 @@ router.post(
     if (type === "product") {
       console.log("🔄 Processing product image...");
       result = await uploadService.uploadProductImage(req.file);
-      console.log("✅ Image processed:", result);
+      console.log("✅ Image processed:", JSON.stringify(result, null, 2));
 
-      // Save to database
-      const productImage = await ProductImage.create({
+      // Prepare data for database
+      const imageData = {
         imageUrl: result.variants.medium.url,
         thumbnailUrl: result.variants.thumbnail.url,
         altText: req.body.altText || "",
         isPrimary: false,
-      });
-      console.log("💾 Saved to database, ID:", productImage.id);
+      };
+      console.log("📝 Data to save:", JSON.stringify(imageData, null, 2));
+
+      // Save to database
+      let productImage;
+      try {
+        productImage = await ProductImage.create(imageData);
+        console.log("💾 Saved to database, ID:", productImage.id);
+      } catch (dbError) {
+        console.error("❌ Database save failed:", dbError.message);
+        console.error("Original error:", dbError.original?.message);
+        console.error("SQL:", dbError.original?.sql);
+        throw dbError;
+      }
 
       res.json({
         status: "success",
         message: "Image uploaded successfully",
         data: {
           id: productImage.id,
+          url: result.variants.medium.url,
+          thumbnailUrl: result.variants.thumbnail.url,
+          variants: result.variants,
+        },
+      });
+    } else if (type === "category") {
+      console.log("🔄 Processing category image...");
+      result = await uploadService.uploadCategoryImage(req.file);
+      console.log("✅ Image processed:", JSON.stringify(result, null, 2));
+
+      // For category, just return the medium variant URL
+      res.json({
+        status: "success",
+        message: "Category image uploaded successfully",
+        data: {
           url: result.variants.medium.url,
           thumbnailUrl: result.variants.thumbnail.url,
           variants: result.variants,

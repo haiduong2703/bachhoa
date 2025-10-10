@@ -62,14 +62,14 @@ const ProductCard = ({ product, className = '' }) => {
           {product.shortDescription}
         </p>
         
-        {/* Rating - Hide for now since we don't have rating data from API yet */}
-        {/* <div className="flex items-center mb-3">
+        {/* Rating */}
+        <div className="flex items-center mb-3">
           <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 className={`w-4 h-4 ${
-                  i < Math.floor(product.rating || 0)
+                  i < Math.floor(product.averageRating || 0)
                     ? 'text-yellow-400 fill-current'
                     : 'text-gray-300'
                 }`}
@@ -77,9 +77,13 @@ const ProductCard = ({ product, className = '' }) => {
             ))}
           </div>
           <span className="text-sm text-gray-500 ml-2">
-            ({product.reviewCount || 0})
+            {product.averageRating > 0 ? (
+              <>({parseFloat(product.averageRating).toFixed(1)}) • {product.reviewCount || 0} đánh giá</>
+            ) : (
+              <>Chưa có đánh giá</>
+            )}
           </span>
-        </div> */}
+        </div>
         
         {/* Price and Add to Cart */}
         <div className="flex items-center justify-between">

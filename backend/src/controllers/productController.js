@@ -4,10 +4,12 @@ import {
   ProductImage,
   Inventory,
   ProductCategory,
+  Review,
 } from "../models/index.js";
 import { NotFoundError, ValidationError } from "../utils/errors.js";
 import { catchAsync } from "../utils/errors.js";
 import { Op } from "sequelize";
+import sequelize from "../database/config.js";
 
 /**
  * Get all products with filtering, sorting, and pagination
@@ -106,6 +108,28 @@ export const getProducts = catchAsync(async (req, res) => {
     offset: parseInt(offset),
     order: orderClause,
     distinct: true,
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(
+            SELECT COALESCE(AVG(rating), 0)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'averageRating'
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'reviewCount'
+        ]
+      ]
+    }
   });
 
   console.log(`📦 Found ${products.length} products`);
@@ -164,6 +188,28 @@ export const getFeaturedProducts = catchAsync(async (req, res) => {
     ],
     limit: parseInt(limit),
     order: [["created_at", "DESC"]],
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(
+            SELECT COALESCE(AVG(rating), 0)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'averageRating'
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'reviewCount'
+        ]
+      ]
+    }
   });
 
   res.json({
@@ -205,6 +251,28 @@ export const getProduct = catchAsync(async (req, res) => {
         as: "inventory",
       },
     ],
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(
+            SELECT COALESCE(AVG(rating), 0)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'averageRating'
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'reviewCount'
+        ]
+      ]
+    }
   });
 
   if (!product) {
@@ -548,6 +616,28 @@ export const getProductsByCategory = catchAsync(async (req, res) => {
     offset: parseInt(offset),
     order: [[sort, order.toUpperCase()]],
     distinct: true,
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(
+            SELECT COALESCE(AVG(rating), 0)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'averageRating'
+        ],
+        [
+          sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM reviews
+            WHERE reviews.product_id = Product.id
+            AND reviews.status = 'approved'
+          )`),
+          'reviewCount'
+        ]
+      ]
+    }
   });
 
   const totalPages = Math.ceil(count / limit);

@@ -14,7 +14,7 @@ import {
   User,
   DollarSign
 } from 'lucide-react'
-import { ordersAPI } from '../../services/api'
+import { orderAPI } from '../../services/api'
 import { formatPrice } from '../../data/mockData'
 import toast from 'react-hot-toast'
 
@@ -59,7 +59,7 @@ const AdminOrders = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      // await ordersAPI.updateOrderStatus(orderId, newStatus)
+      await orderAPI.updateOrderStatus(orderId, newStatus)
       toast.success('Cập nhật trạng thái thành công')
       fetchOrders() // Refresh data
     } catch (error) {

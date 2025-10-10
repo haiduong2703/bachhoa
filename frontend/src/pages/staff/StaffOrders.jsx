@@ -18,6 +18,7 @@ import {
   MapPin
 } from 'lucide-react'
 import { formatPrice } from '../../data/mockData'
+import { orderAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const StaffOrders = () => {
@@ -77,7 +78,7 @@ const StaffOrders = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      // await ordersAPI.updateOrderStatus(orderId, newStatus)
+      await orderAPI.updateOrderStatus(orderId, newStatus)
       setOrders(orders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       ))

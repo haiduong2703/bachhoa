@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCartStore } from '../../store/cartStore'
 import { useAuthStore } from '../../store/authStore'
 import { formatPrice } from '../../data/mockData'
-import { ordersAPI } from '../../services/api'
+import { orderAPI } from '../../services/api'
 import {
   ArrowLeft,
   MapPin,
@@ -126,11 +126,11 @@ const CheckoutPage = () => {
 
       console.log('Creating order:', orderData)
 
-      const response = await ordersAPI.createOrder(orderData)
+      const response = await orderAPI.createOrder(orderData)
       console.log('Order created:', response.data)
 
       // Clear cart after successful order
-      clearCart()
+      await clearCart()
 
       toast.success('Đặt hàng thành công!')
 
