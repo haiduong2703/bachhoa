@@ -454,7 +454,8 @@ const AdminProductForm = () => {
                 className="select select-bordered w-full"
               >
                 <option value="active">Hoạt động</option>
-                <option value="inactive">Tạm dừng</option>
+                <option value="out_of_stock">Hết hàng</option>
+                <option value="discontinued">Ngừng bán</option>
               </select>
             </div>
           </div>

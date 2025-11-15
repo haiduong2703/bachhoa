@@ -1,36 +1,37 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, Mail, CheckCircle } from 'lucide-react'
-import { authAPI } from '../../services/api'
-import toast from 'react-hot-toast'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
+import { authAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isEmailSent, setIsEmailSent] = useState(false)
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailSent, setIsEmailSent] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!email) {
-      toast.error('Vui lòng nhập email')
-      return
+      toast.error("Vui lòng nhập email");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // Call forgot password API
-      await authAPI.forgotPassword({ email })
-      setIsEmailSent(true)
-      toast.success('Email khôi phục mật khẩu đã được gửi')
+      await authAPI.forgotPassword({ email });
+      setIsEmailSent(true);
+      toast.success("Email khôi phục mật khẩu đã được gửi");
     } catch (error) {
-      const message = error.response?.data?.message || 'Không thể gửi email khôi phục'
-      toast.error(message)
+      const message =
+        error.response?.data?.message || "Không thể gửi email khôi phục";
+      toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (isEmailSent) {
     return (
@@ -56,28 +57,24 @@ const ForgotPasswordPage = () => {
 
               <div className="space-y-4 text-sm text-gray-600">
                 <p>
-                  Vui lòng kiểm tra hộp thư đến (và cả thư mục spam) để tìm email từ chúng tôi.
+                  Vui lòng kiểm tra hộp thư đến (và cả thư mục spam) để tìm
+                  email từ chúng tôi.
                 </p>
-                <p>
-                  Link khôi phục sẽ hết hạn sau 15 phút.
-                </p>
+                <p>Link khôi phục sẽ hết hạn sau 15 phút.</p>
               </div>
 
               <div className="mt-8 space-y-3">
                 <button
                   onClick={() => {
-                    setIsEmailSent(false)
-                    setEmail('')
+                    setIsEmailSent(false);
+                    setEmail("");
                   }}
                   className="btn btn-outline w-full"
                 >
                   Gửi lại email
                 </button>
 
-                <Link
-                  to="/auth/login"
-                  className="btn btn-primary w-full"
-                >
+                <Link to="/auth/login" className="btn btn-primary w-full">
                   Quay lại đăng nhập
                 </Link>
               </div>
@@ -85,7 +82,7 @@ const ForgotPasswordPage = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -96,7 +93,9 @@ const ForgotPasswordPage = () => {
             <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">B</span>
             </div>
-            <span className="text-2xl font-bold text-gray-900">Bach Hoa</span>
+            <span className="text-2xl font-bold text-gray-900">
+              Memory Lane
+            </span>
           </Link>
         </div>
 
@@ -112,7 +111,10 @@ const ForgotPasswordPage = () => {
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email
               </label>
               <div className="mt-1 relative">
@@ -140,7 +142,7 @@ const ForgotPasswordPage = () => {
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
-                  'Gửi email khôi phục'
+                  "Gửi email khôi phục"
                 )}
               </button>
             </div>
@@ -178,7 +180,7 @@ const ForgotPasswordPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ForgotPasswordPage
+export default ForgotPasswordPage;

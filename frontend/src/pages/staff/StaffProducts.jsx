@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -11,71 +11,71 @@ import {
   Edit,
   BarChart3,
   TrendingUp,
-  TrendingDown
-} from 'lucide-react'
-import useProductStore from '../../store/productStore'
-import { formatPrice } from '../../data/mockData'
-import { productsAPI } from '../../services/api'
-import toast from 'react-hot-toast'
+  TrendingDown,
+} from "lucide-react";
+import useProductStore from "../../store/productStore";
+import { formatPrice } from "../../data/mockData";
+import { productsAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const StaffProducts = () => {
-  const {
-    products,
-    categories,
-    isLoading,
-    fetchProducts,
-    fetchCategories
-  } = useProductStore()
+  const { products, categories, isLoading, fetchProducts, fetchCategories } =
+    useProductStore();
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [stockFilter, setStockFilter] = useState('')
-  const [sortBy, setSortBy] = useState('name')
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
-    fetchProducts()
-    fetchCategories()
-  }, [fetchProducts, fetchCategories])
+    // Staff xem tất cả sản phẩm (không filter status)
+    fetchProducts({ status: "" });
+    fetchCategories();
+  }, [fetchProducts, fetchCategories]);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !selectedCategory ||
-                           product.categories?.some(cat => cat.id.toString() === selectedCategory)
-    const matchesStatus = !statusFilter || product.status === statusFilter
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      !selectedCategory ||
+      product.categories?.some((cat) => cat.id.toString() === selectedCategory);
+    const matchesStatus = !statusFilter || product.status === statusFilter;
 
-    let matchesStock = true
-    if (stockFilter === 'low') {
-      matchesStock = product.inventory?.quantity <= (product.inventory?.lowStockThreshold || 10)
-    } else if (stockFilter === 'out') {
-      matchesStock = product.inventory?.quantity === 0
-    } else if (stockFilter === 'in') {
-      matchesStock = product.inventory?.quantity > 0
+    let matchesStock = true;
+    if (stockFilter === "low") {
+      matchesStock =
+        product.inventory?.quantity <=
+        (product.inventory?.lowStockThreshold || 10);
+    } else if (stockFilter === "out") {
+      matchesStock = product.inventory?.quantity === 0;
+    } else if (stockFilter === "in") {
+      matchesStock = product.inventory?.quantity > 0;
     }
 
-    return matchesSearch && matchesCategory && matchesStatus && matchesStock
-  })
+    return matchesSearch && matchesCategory && matchesStatus && matchesStock;
+  });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    let aValue = a[sortBy]
-    let bValue = b[sortBy]
+    let aValue = a[sortBy];
+    let bValue = b[sortBy];
 
-    if (sortBy === 'price') {
-      aValue = parseFloat(aValue)
-      bValue = parseFloat(bValue)
-    } else if (sortBy === 'stock') {
-      aValue = a.inventory?.quantity || 0
-      bValue = b.inventory?.quantity || 0
+    if (sortBy === "price") {
+      aValue = parseFloat(aValue);
+      bValue = parseFloat(bValue);
+    } else if (sortBy === "stock") {
+      aValue = a.inventory?.quantity || 0;
+      bValue = b.inventory?.quantity || 0;
     }
 
-    if (sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1
+    if (sortOrder === "asc") {
+      return aValue > bValue ? 1 : -1;
     } else {
-      return aValue < bValue ? 1 : -1
+      return aValue < bValue ? 1 : -1;
     }
-  })
+  });
 
   const handleStatusUpdate = async (productId, newStatus) => {
     try {
@@ -83,60 +83,67 @@ const StaffProducts = () => {
       // await productsAPI.updateProduct(productId, { status: newStatus })
 
       // Update local state
-      const updatedProducts = products.map(product =>
+      const updatedProducts = products.map((product) =>
         product.id === productId ? { ...product, status: newStatus } : product
-      )
+      );
 
       // This would normally be handled by the store
-      console.log('Updated product status:', { productId, newStatus })
+      console.log("Updated product status:", { productId, newStatus });
 
-      toast.success(`Đã cập nhật trạng thái sản phẩm thành "${getStatusText(newStatus)}"`)
+      toast.success(
+        `Đã cập nhật trạng thái sản phẩm thành "${getStatusText(newStatus)}"`
+      );
     } catch (error) {
-      console.error('Failed to update product status:', error)
-      toast.error('Không thể cập nhật trạng thái sản phẩm')
+      console.error("Failed to update product status:", error);
+      toast.error("Không thể cập nhật trạng thái sản phẩm");
     }
-  }
+  };
 
   const getStatusText = (status) => {
     const statusMap = {
-      active: 'Hoạt động',
-      inactive: 'Tạm dừng',
-      out_of_stock: 'Hết hàng'
-    }
-    return statusMap[status] || status
-  }
+      active: "Hoạt động",
+      inactive: "Tạm dừng",
+      out_of_stock: "Hết hàng",
+    };
+    return statusMap[status] || status;
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      active: { color: 'green', text: 'Hoạt động', icon: CheckCircle },
-      inactive: { color: 'gray', text: 'Tạm dừng', icon: XCircle },
-      out_of_stock: { color: 'red', text: 'Hết hàng', icon: AlertTriangle }
-    }
+      active: { color: "green", text: "Hoạt động", icon: CheckCircle },
+      out_of_stock: { color: "red", text: "Hết hàng", icon: AlertTriangle },
+      discontinued: { color: "gray", text: "Ngừng bán", icon: XCircle },
+    };
 
-    const config = statusConfig[status] || statusConfig.inactive
-    const Icon = config.icon
+    const config = statusConfig[status] || statusConfig.out_of_stock;
+    const Icon = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}
+      >
         <Icon className="w-3 h-3 mr-1" />
         {config.text}
       </span>
-    )
-  }
+    );
+  };
 
   const getStockStatus = (quantity, lowStockThreshold = 10) => {
     if (quantity === 0) {
-      return { color: 'red', text: 'Hết hàng', icon: XCircle }
+      return { color: "red", text: "Hết hàng", icon: XCircle };
     } else if (quantity <= lowStockThreshold) {
-      return { color: 'yellow', text: 'Sắp hết', icon: AlertTriangle }
+      return { color: "yellow", text: "Sắp hết", icon: AlertTriangle };
     } else {
-      return { color: 'green', text: 'Còn hàng', icon: CheckCircle }
+      return { color: "green", text: "Còn hàng", icon: CheckCircle };
     }
-  }
+  };
 
   const ProductCard = ({ product }) => {
-    const stockStatus = getStockStatus(product.inventory?.quantity, product.inventory?.lowStockThreshold)
-    const StockIcon = stockStatus.icon
+    const stockStatus = getStockStatus(
+      product.inventory?.quantity,
+      product.inventory?.lowStockThreshold
+    );
+    const StockIcon = stockStatus.icon;
 
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -144,17 +151,23 @@ const StaffProducts = () => {
           <div className="flex items-start space-x-4">
             <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images?.[0]?.imageUrl || '/placeholder-product.jpg'}
+                src={
+                  product.images?.[0]?.imageUrl || "/placeholder-product.jpg"
+                }
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                {product.name}
+              </h3>
               <p className="text-sm text-gray-500 mb-2">SKU: {product.sku}</p>
               <div className="flex items-center space-x-2">
                 {getStatusBadge(product.status)}
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${stockStatus.color}-100 text-${stockStatus.color}-800`}>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${stockStatus.color}-100 text-${stockStatus.color}-800`}
+                >
                   <StockIcon className="w-3 h-3 mr-1" />
                   {stockStatus.text}
                 </span>
@@ -162,7 +175,9 @@ const StaffProducts = () => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xl font-bold text-gray-900">{formatPrice(product.price)}</div>
+            <div className="text-xl font-bold text-gray-900">
+              {formatPrice(product.price)}
+            </div>
             {product.comparePrice && (
               <div className="text-sm text-gray-500 line-through">
                 {formatPrice(product.comparePrice)}
@@ -186,28 +201,33 @@ const StaffProducts = () => {
           <div>
             <p className="text-sm text-gray-600">Danh mục</p>
             <p className="text-sm font-medium text-gray-900">
-              {product.categories?.map(cat => cat.name).join(', ') || 'Chưa phân loại'}
+              {product.categories?.map((cat) => cat.name).join(", ") ||
+                "Chưa phân loại"}
             </p>
           </div>
         </div>
 
         {product.description && (
           <div className="mb-4">
-            <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {product.description}
+            </p>
           </div>
         )}
 
         {/* Status Update Section */}
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">Cập nhật trạng thái</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-2">
+            Cập nhật trạng thái
+          </h4>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => handleStatusUpdate(product.id, 'active')}
-              disabled={product.status === 'active'}
+              onClick={() => handleStatusUpdate(product.id, "active")}
+              disabled={product.status === "active"}
               className={`btn btn-sm ${
-                product.status === 'active'
-                  ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                  : 'btn-outline hover:bg-green-50'
+                product.status === "active"
+                  ? "bg-green-100 text-green-800 cursor-not-allowed"
+                  : "btn-outline hover:bg-green-50"
               }`}
             >
               <CheckCircle className="w-3 h-3 mr-1" />
@@ -215,25 +235,25 @@ const StaffProducts = () => {
             </button>
 
             <button
-              onClick={() => handleStatusUpdate(product.id, 'inactive')}
-              disabled={product.status === 'inactive'}
+              onClick={() => handleStatusUpdate(product.id, "discontinued")}
+              disabled={product.status === "discontinued"}
               className={`btn btn-sm ${
-                product.status === 'inactive'
-                  ? 'bg-gray-100 text-gray-800 cursor-not-allowed'
-                  : 'btn-outline hover:bg-gray-50'
+                product.status === "discontinued"
+                  ? "bg-gray-100 text-gray-800 cursor-not-allowed"
+                  : "btn-outline hover:bg-gray-50"
               }`}
             >
               <XCircle className="w-3 h-3 mr-1" />
-              Tạm dừng
+              Ngừng bán
             </button>
 
             <button
-              onClick={() => handleStatusUpdate(product.id, 'out_of_stock')}
-              disabled={product.status === 'out_of_stock'}
+              onClick={() => handleStatusUpdate(product.id, "out_of_stock")}
+              disabled={product.status === "out_of_stock"}
               className={`btn btn-sm ${
-                product.status === 'out_of_stock'
-                  ? 'bg-red-100 text-red-800 cursor-not-allowed'
-                  : 'btn-outline hover:bg-red-50'
+                product.status === "out_of_stock"
+                  ? "bg-red-100 text-red-800 cursor-not-allowed"
+                  : "btn-outline hover:bg-red-50"
               }`}
             >
               <AlertTriangle className="w-3 h-3 mr-1" />
@@ -258,15 +278,15 @@ const StaffProducts = () => {
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -306,7 +326,7 @@ const StaffProducts = () => {
               className="input"
             >
               <option value="">Tất cả danh mục</option>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -333,9 +353,9 @@ const StaffProducts = () => {
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
-                const [field, order] = e.target.value.split('-')
-                setSortBy(field)
-                setSortOrder(order)
+                const [field, order] = e.target.value.split("-");
+                setSortBy(field);
+                setSortOrder(order);
               }}
               className="input"
             >
@@ -357,7 +377,9 @@ const StaffProducts = () => {
             <Package className="w-8 h-8 text-blue-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Tổng sản phẩm</p>
-              <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {products.length}
+              </p>
             </div>
           </div>
         </div>
@@ -367,7 +389,13 @@ const StaffProducts = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Còn hàng</p>
               <p className="text-2xl font-bold text-gray-900">
-                {products.filter(p => p.inventory?.quantity > (p.inventory?.lowStockThreshold || 10)).length}
+                {
+                  products.filter(
+                    (p) =>
+                      p.inventory?.quantity >
+                      (p.inventory?.lowStockThreshold || 10)
+                  ).length
+                }
               </p>
             </div>
           </div>
@@ -378,11 +406,13 @@ const StaffProducts = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Sắp hết</p>
               <p className="text-2xl font-bold text-gray-900">
-                {products.filter(p => {
-                  const qty = p.inventory?.quantity || 0
-                  const threshold = p.inventory?.lowStockThreshold || 10
-                  return qty > 0 && qty <= threshold
-                }).length}
+                {
+                  products.filter((p) => {
+                    const qty = p.inventory?.quantity || 0;
+                    const threshold = p.inventory?.lowStockThreshold || 10;
+                    return qty > 0 && qty <= threshold;
+                  }).length
+                }
               </p>
             </div>
           </div>
@@ -393,7 +423,10 @@ const StaffProducts = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Hết hàng</p>
               <p className="text-2xl font-bold text-gray-900">
-                {products.filter(p => (p.inventory?.quantity || 0) === 0).length}
+                {
+                  products.filter((p) => (p.inventory?.quantity || 0) === 0)
+                    .length
+                }
               </p>
             </div>
           </div>
@@ -404,7 +437,7 @@ const StaffProducts = () => {
       <div>
         {sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {sortedProducts.map(product => (
+            {sortedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -416,7 +449,7 @@ const StaffProducts = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default StaffProducts
+export default StaffProducts;

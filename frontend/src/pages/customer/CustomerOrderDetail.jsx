@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
   Package,
@@ -15,75 +15,97 @@ import {
   Star,
   RotateCcw,
   Download,
-  MessageCircle
-} from 'lucide-react'
-import { formatPrice } from '../../data/mockData'
-import { useAuthStore } from '../../store/authStore'
-import { orderAPI } from '../../services/api'
-import toast from 'react-hot-toast'
+  MessageCircle,
+} from "lucide-react";
+import { formatPrice } from "../../data/mockData";
+import { useAuthStore } from "../../store/authStore";
+import { orderAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const CustomerOrderDetail = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { user } = useAuthStore()
-  const [order, setOrder] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [order, setOrder] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchOrderDetail()
-  }, [id])
+    fetchOrderDetail();
+  }, [id]);
 
   const createTimeline = (order) => {
-    const statuses = ['pending', 'confirmed', 'packing', 'shipping', 'delivered']
+    const statuses = [
+      "pending",
+      "confirmed",
+      "packing",
+      "shipping",
+      "delivered",
+    ];
     const statusLabels = {
-      pending: { title: 'Chờ xác nhận', description: 'Đơn hàng đang chờ xác nhận' },
-      confirmed: { title: 'Đã xác nhận', description: 'Đơn hàng đã được xác nhận' },
-      packing: { title: 'Đang đóng gói', description: 'Đơn hàng đang được đóng gói' },
-      shipping: { title: 'Đang giao hàng', description: 'Đơn hàng đang trên đường giao' },
-      delivered: { title: 'Đã giao hàng', description: 'Đơn hàng đã được giao thành công' }
-    }
-    
-    const currentIndex = statuses.indexOf(order.status)
-    
+      pending: {
+        title: "Chờ xác nhận",
+        description: "Đơn hàng đang chờ xác nhận",
+      },
+      confirmed: {
+        title: "Đã xác nhận",
+        description: "Đơn hàng đã được xác nhận",
+      },
+      packing: {
+        title: "Đang đóng gói",
+        description: "Đơn hàng đang được đóng gói",
+      },
+      shipping: {
+        title: "Đang giao hàng",
+        description: "Đơn hàng đang trên đường giao",
+      },
+      delivered: {
+        title: "Đã giao hàng",
+        description: "Đơn hàng đã được giao thành công",
+      },
+    };
+
+    const currentIndex = statuses.indexOf(order.status);
+
     return statuses.map((status, index) => ({
       status,
       title: statusLabels[status].title,
       description: statusLabels[status].description,
       completed: index <= currentIndex,
-      timestamp: index <= currentIndex ? order.updatedAt || order.createdAt : null
-    }))
-  }
+      timestamp:
+        index <= currentIndex ? order.updatedAt || order.createdAt : null,
+    }));
+  };
 
   const fetchOrderDetail = async () => {
     try {
-      setIsLoading(true)
-      
-      const response = await orderAPI.getOrder(id)
-      
-      if (response.data.status === 'success') {
-        const orderData = response.data.data.order
-        
+      setIsLoading(true);
+
+      const response = await orderAPI.getOrder(id);
+
+      if (response.data.status === "success") {
+        const orderData = response.data.data.order;
+
         // Parse JSON fields if they are strings
-        if (typeof orderData.shippingAddress === 'string') {
-          orderData.shippingAddress = JSON.parse(orderData.shippingAddress)
+        if (typeof orderData.shippingAddress === "string") {
+          orderData.shippingAddress = JSON.parse(orderData.shippingAddress);
         }
-        if (typeof orderData.billingAddress === 'string') {
-          orderData.billingAddress = JSON.parse(orderData.billingAddress)
+        if (typeof orderData.billingAddress === "string") {
+          orderData.billingAddress = JSON.parse(orderData.billingAddress);
         }
-        
+
         // Create timeline from order status
-        const timeline = createTimeline(orderData)
-        
+        const timeline = createTimeline(orderData);
+
         setOrder({
           ...orderData,
-          timeline
-        })
+          timeline,
+        });
       }
-      
+
       /* Mock data for reference:
       const mockOrder = {
         id: 1,
-        orderNumber: 'BH1755847565747001',
+        orderNumber: 'ML1755847565747001',
         status: 'delivered',
         total: 187000,
         subtotal: 145000,
@@ -172,72 +194,75 @@ const CustomerOrderDetail = () => {
         canReview: true
       }
       */
-      
     } catch (error) {
-      console.error('Failed to fetch order detail:', error)
-      toast.error('Không thể tải thông tin đơn hàng')
+      console.error("Failed to fetch order detail:", error);
+      toast.error("Không thể tải thông tin đơn hàng");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCancelOrder = async () => {
-    if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) return;
 
     try {
-      setOrder(prev => ({ ...prev, status: 'cancelled', canCancel: false }))
-      toast.success('Đã hủy đơn hàng')
+      setOrder((prev) => ({ ...prev, status: "cancelled", canCancel: false }));
+      toast.success("Đã hủy đơn hàng");
     } catch (error) {
-      toast.error('Không thể hủy đơn hàng')
+      toast.error("Không thể hủy đơn hàng");
     }
-  }
+  };
 
   const handleReorder = async () => {
     try {
       // Add all items from this order to cart
-      toast.success('Đã thêm sản phẩm vào giỏ hàng')
-      navigate('/cart')
+      toast.success("Đã thêm sản phẩm vào giỏ hàng");
+      navigate("/cart");
     } catch (error) {
-      toast.error('Không thể đặt lại đơn hàng')
+      toast.error("Không thể đặt lại đơn hàng");
     }
-  }
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'yellow', text: 'Chờ xử lý', icon: Clock },
-      processing: { color: 'blue', text: 'Đang xử lý', icon: Package },
-      shipping: { color: 'purple', text: 'Đang giao', icon: Truck },
-      delivered: { color: 'green', text: 'Đã giao', icon: CheckCircle },
-      cancelled: { color: 'red', text: 'Đã hủy', icon: XCircle }
-    }
+      pending: { color: "yellow", text: "Chờ xử lý", icon: Clock },
+      processing: { color: "blue", text: "Đang xử lý", icon: Package },
+      shipping: { color: "purple", text: "Đang giao", icon: Truck },
+      delivered: { color: "green", text: "Đã giao", icon: CheckCircle },
+      cancelled: { color: "red", text: "Đã hủy", icon: XCircle },
+    };
 
-    const config = statusConfig[status] || statusConfig.pending
-    const Icon = config.icon
+    const config = statusConfig[status] || statusConfig.pending;
+    const Icon = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${config.color}-100 text-${config.color}-800`}
+      >
         <Icon className="w-4 h-4 mr-2" />
         {config.text}
       </span>
-    )
-  }
+    );
+  };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const TimelineItem = ({ item, isLast }) => (
     <div className="flex items-start space-x-4">
       <div className="flex flex-col items-center">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-          item.completed ? 'bg-green-100' : 'bg-gray-100'
-        }`}>
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+            item.completed ? "bg-green-100" : "bg-gray-100"
+          }`}
+        >
           {item.completed ? (
             <CheckCircle className="w-4 h-4 text-green-600" />
           ) : (
@@ -245,15 +270,19 @@ const CustomerOrderDetail = () => {
           )}
         </div>
         {!isLast && (
-          <div className={`w-0.5 h-12 mt-2 ${
-            item.completed ? 'bg-green-200' : 'bg-gray-200'
-          }`} />
+          <div
+            className={`w-0.5 h-12 mt-2 ${
+              item.completed ? "bg-green-200" : "bg-gray-200"
+            }`}
+          />
         )}
       </div>
       <div className="flex-1 pb-8">
-        <h4 className={`font-medium ${
-          item.completed ? 'text-gray-900' : 'text-gray-500'
-        }`}>
+        <h4
+          className={`font-medium ${
+            item.completed ? "text-gray-900" : "text-gray-500"
+          }`}
+        >
           {item.title}
         </h4>
         <p className="text-sm text-gray-600 mt-1">{item.description}</p>
@@ -264,14 +293,14 @@ const CustomerOrderDetail = () => {
         )}
       </div>
     </div>
-  )
+  );
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   if (!order) {
@@ -282,7 +311,7 @@ const CustomerOrderDetail = () => {
           Quay lại danh sách đơn hàng
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -291,16 +320,16 @@ const CustomerOrderDetail = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigate('/customer/orders')}
+            onClick={() => navigate("/customer/orders")}
             className="p-2 text-gray-400 hover:text-gray-600"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng</h1>
-            <p className="text-gray-600 mt-1">
-              Đơn hàng #{order.orderNumber}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Chi tiết đơn hàng
+            </h1>
+            <p className="text-gray-600 mt-1">Đơn hàng #{order.orderNumber}</p>
           </div>
         </div>
 
@@ -333,7 +362,9 @@ const CustomerOrderDetail = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Order Timeline */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Trạng thái đơn hàng</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">
+              Trạng thái đơn hàng
+            </h2>
             <div>
               {order.timeline?.map((item, index) => (
                 <TimelineItem
@@ -347,19 +378,29 @@ const CustomerOrderDetail = () => {
 
           {/* Order Items */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Sản phẩm đã đặt</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">
+              Sản phẩm đã đặt
+            </h2>
             <div className="space-y-4">
-              {order.items?.map(item => (
-                <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+              {order.items?.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg"
+                >
                   <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      src={item.product?.images?.[0]?.imageUrl || '/placeholder-product.jpg'}
+                      src={
+                        item.product?.images?.[0]?.imageUrl ||
+                        "/placeholder-product.jpg"
+                      }
                       alt={item.product?.name || item.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.product?.name || item.name}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {item.product?.name || item.name}
+                    </h3>
                     <p className="text-sm text-gray-500">
                       {formatPrice(Number(item.unitPrice))} x {item.quantity}
                     </p>
@@ -368,7 +409,7 @@ const CustomerOrderDetail = () => {
                     <p className="font-medium text-gray-900">
                       {formatPrice(Number(item.unitPrice) * item.quantity)}
                     </p>
-                    {order.status === 'delivered' && (
+                    {order.status === "delivered" && (
                       <Link
                         to={`/customer/reviews/create?product=${item.productId}&order=${order.id}`}
                         className="text-sm text-blue-600 hover:text-blue-700 flex items-center justify-end mt-1"
@@ -392,7 +433,9 @@ const CustomerOrderDetail = () => {
             <div className="space-y-2 text-gray-600">
               <div className="flex items-center">
                 <User className="w-4 h-4 mr-2 text-gray-400" />
-                <span className="font-medium">{order.shippingAddress.recipientName}</span>
+                <span className="font-medium">
+                  {order.shippingAddress.recipientName}
+                </span>
               </div>
               <div className="flex items-center">
                 <Phone className="w-4 h-4 mr-2 text-gray-400" />
@@ -403,7 +446,9 @@ const CustomerOrderDetail = () => {
                 <div>
                   <div>{order.shippingAddress.addressLine1}</div>
                   <div>
-                    {order.shippingAddress.ward}, {order.shippingAddress.district}, {order.shippingAddress.city}
+                    {order.shippingAddress.ward},{" "}
+                    {order.shippingAddress.district},{" "}
+                    {order.shippingAddress.city}
                   </div>
                 </div>
               </div>
@@ -414,7 +459,9 @@ const CustomerOrderDetail = () => {
         {/* Right Column - Order Summary */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Tóm tắt đơn hàng</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">
+              Tóm tắt đơn hàng
+            </h2>
 
             {/* Order Info */}
             <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
@@ -431,8 +478,12 @@ const CustomerOrderDetail = () => {
               <div className="flex items-center text-sm text-gray-600">
                 <CreditCard className="w-4 h-4 mr-2" />
                 <span>
-                  {order.paymentMethod === 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán online'}
-                  {order.paymentStatus === 'paid' && (
+                  {order.paymentMethod === "cod" &&
+                    "💵 Thanh toán khi nhận hàng (COD)"}
+                  {order.paymentMethod === "vnpay" && "💳 Thanh toán VNPAY"}
+                  {!["cod", "vnpay"].includes(order.paymentMethod) &&
+                    "Thanh toán online"}
+                  {order.paymentStatus === "paid" && (
                     <span className="text-green-600 ml-2">✓ Đã thanh toán</span>
                   )}
                 </span>
@@ -443,12 +494,16 @@ const CustomerOrderDetail = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Tạm tính:</span>
-                <span className="font-medium">{formatPrice(Number(order.subtotal))}</span>
+                <span className="font-medium">
+                  {formatPrice(Number(order.subtotal))}
+                </span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-gray-600">Phí vận chuyển:</span>
-                <span className="font-medium">{formatPrice(Number(order.shippingAmount || 0))}</span>
+                <span className="font-medium">
+                  {formatPrice(Number(order.shippingAmount || 0))}
+                </span>
               </div>
 
               {order.discountAmount > 0 && (
@@ -461,14 +516,18 @@ const CustomerOrderDetail = () => {
               {order.taxAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Thuế:</span>
-                  <span className="font-medium">{formatPrice(Number(order.taxAmount))}</span>
+                  <span className="font-medium">
+                    {formatPrice(Number(order.taxAmount))}
+                  </span>
                 </div>
               )}
 
               <div className="border-t border-gray-200 pt-3">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Tổng cộng:</span>
-                  <span className="text-green-600">{formatPrice(Number(order.totalAmount))}</span>
+                  <span className="text-green-600">
+                    {formatPrice(Number(order.totalAmount))}
+                  </span>
                 </div>
               </div>
             </div>
@@ -489,7 +548,7 @@ const CustomerOrderDetail = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CustomerOrderDetail
+export default CustomerOrderDetail;

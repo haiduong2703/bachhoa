@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -10,109 +10,114 @@ import {
   Save,
   X,
   Camera,
-  Key
-} from 'lucide-react'
-import { useAuthStore } from '../../store/authStore'
-import toast from 'react-hot-toast'
+  Key,
+} from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
+import toast from "react-hot-toast";
 
 const StaffProfile = () => {
-  const { user, updateProfile } = useAuthStore()
-  const [isEditing, setIsEditing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const { user, updateProfile } = useAuthStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: ''
-  })
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
 
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || ''
-      })
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+      });
     }
-  }, [user])
+  }, [user]);
 
   const handleEdit = () => {
-    setIsEditing(true)
-  }
+    setIsEditing(true);
+  };
 
   const handleCancel = () => {
-    setIsEditing(false)
+    setIsEditing(false);
     // Reset form data
     if (user) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || ''
-      })
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+      });
     }
-  }
+  };
 
   const handleSave = async () => {
     try {
-      setIsLoading(true)
-      // await updateProfile(formData)
-      toast.success('Cập nhật thông tin thành công')
-      setIsEditing(false)
+      setIsLoading(true);
+      await updateProfile(formData);
+      toast.success("Cập nhật thông tin thành công");
+      setIsEditing(false);
     } catch (error) {
-      toast.error('Không thể cập nhật thông tin')
+      console.error("Update profile error:", error);
+      toast.error(
+        error.response?.data?.message || "Không thể cập nhật thông tin"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Chưa cập nhật'
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
+    if (!dateString) return "Chưa cập nhật";
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   const getRoleBadge = (roles) => {
-    if (!roles || roles.length === 0) return null
+    if (!roles || roles.length === 0) return null;
 
-    const role = roles[0]
+    const role = roles[0];
     const roleConfig = {
-      admin: { color: 'purple', text: 'Quản trị viên' },
-      staff: { color: 'blue', text: 'Nhân viên' },
-      customer: { color: 'gray', text: 'Khách hàng' }
-    }
+      admin: { color: "purple", text: "Quản trị viên" },
+      staff: { color: "blue", text: "Nhân viên" },
+      customer: { color: "gray", text: "Khách hàng" },
+    };
 
-    const config = roleConfig[role.name] || roleConfig.customer
+    const config = roleConfig[role.name] || roleConfig.customer;
 
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-${config.color}-100 text-${config.color}-800`}
+      >
         <Shield className="w-4 h-4 mr-1" />
         {config.text}
       </span>
-    )
-  }
+    );
+  };
 
   if (!user) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -120,7 +125,9 @@ const StaffProfile = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Thông tin cá nhân</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Thông tin cá nhân
+          </h1>
           <p className="text-gray-600 mt-1">
             Quản lý thông tin tài khoản của bạn
           </p>
@@ -151,7 +158,8 @@ const StaffProfile = () => {
                     />
                   ) : (
                     <span className="text-2xl font-bold text-gray-600">
-                      {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+                      {user.firstName?.charAt(0)}
+                      {user.lastName?.charAt(0)}
                     </span>
                   )}
                 </div>
@@ -165,9 +173,7 @@ const StaffProfile = () => {
               </h2>
               <p className="text-gray-600 mb-4">{user.email}</p>
 
-              <div className="mb-4">
-                {getRoleBadge(user.roles)}
-              </div>
+              <div className="mb-4">{getRoleBadge(user.roles)}</div>
 
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center justify-center">
@@ -185,7 +191,9 @@ const StaffProfile = () => {
 
           {/* Quick Stats */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Thống kê
+            </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Đơn hàng đã xử lý</span>
@@ -207,7 +215,9 @@ const StaffProfile = () => {
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Thông tin chi tiết</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Thông tin chi tiết
+              </h3>
               {isEditing && (
                 <div className="flex items-center space-x-3">
                   <button
@@ -250,7 +260,9 @@ const StaffProfile = () => {
                 ) : (
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                     <User className="w-4 h-4 text-gray-400 mr-3" />
-                    <span className="text-gray-900">{user.firstName || 'Chưa cập nhật'}</span>
+                    <span className="text-gray-900">
+                      {user.firstName || "Chưa cập nhật"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -271,7 +283,9 @@ const StaffProfile = () => {
                 ) : (
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                     <User className="w-4 h-4 text-gray-400 mr-3" />
-                    <span className="text-gray-900">{user.lastName || 'Chưa cập nhật'}</span>
+                    <span className="text-gray-900">
+                      {user.lastName || "Chưa cập nhật"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -285,10 +299,14 @@ const StaffProfile = () => {
                   <Mail className="w-4 h-4 text-gray-400 mr-3" />
                   <span className="text-gray-900">{user.email}</span>
                   {user.emailVerified && (
-                    <span className="ml-2 text-green-600 text-sm">✓ Đã xác thực</span>
+                    <span className="ml-2 text-green-600 text-sm">
+                      ✓ Đã xác thực
+                    </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Email không thể thay đổi</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Email không thể thay đổi
+                </p>
               </div>
 
               {/* Phone */}
@@ -307,7 +325,9 @@ const StaffProfile = () => {
                 ) : (
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                     <Phone className="w-4 h-4 text-gray-400 mr-3" />
-                    <span className="text-gray-900">{user.phone || 'Chưa cập nhật'}</span>
+                    <span className="text-gray-900">
+                      {user.phone || "Chưa cập nhật"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -328,7 +348,9 @@ const StaffProfile = () => {
                 ) : (
                   <div className="flex items-start p-3 bg-gray-50 rounded-lg">
                     <MapPin className="w-4 h-4 text-gray-400 mr-3 mt-0.5" />
-                    <span className="text-gray-900">{user.address || 'Chưa cập nhật'}</span>
+                    <span className="text-gray-900">
+                      {user.address || "Chưa cập nhật"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -337,19 +359,21 @@ const StaffProfile = () => {
 
           {/* Security Section */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Bảo mật</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Bảo mật
+            </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center">
                   <Key className="w-5 h-5 text-gray-400 mr-3" />
                   <div>
                     <p className="font-medium text-gray-900">Mật khẩu</p>
-                    <p className="text-sm text-gray-500">Cập nhật lần cuối: {formatDate(user.updated_at)}</p>
+                    <p className="text-sm text-gray-500">
+                      Cập nhật lần cuối: {formatDate(user.updated_at)}
+                    </p>
                   </div>
                 </div>
-                <button className="btn btn-outline btn-sm">
-                  Đổi mật khẩu
-                </button>
+                <button className="btn btn-outline btn-sm">Đổi mật khẩu</button>
               </div>
 
               <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -357,19 +381,19 @@ const StaffProfile = () => {
                   <Shield className="w-5 h-5 text-gray-400 mr-3" />
                   <div>
                     <p className="font-medium text-gray-900">Xác thực 2 bước</p>
-                    <p className="text-sm text-gray-500">Tăng cường bảo mật tài khoản</p>
+                    <p className="text-sm text-gray-500">
+                      Tăng cường bảo mật tài khoản
+                    </p>
                   </div>
                 </div>
-                <button className="btn btn-outline btn-sm">
-                  Kích hoạt
-                </button>
+                <button className="btn btn-outline btn-sm">Kích hoạt</button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default StaffProfile
+export default StaffProfile;

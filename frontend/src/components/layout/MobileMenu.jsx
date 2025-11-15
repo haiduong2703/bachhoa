@@ -1,34 +1,45 @@
-import { Link } from 'react-router-dom'
-import { useAuthStore } from '../../store/authStore'
-import { X, Home, Package, ShoppingCart, User, LogIn, UserPlus, FolderTree, Info, Phone } from 'lucide-react'
+import { Link } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
+import {
+  X,
+  Home,
+  Package,
+  ShoppingCart,
+  User,
+  LogIn,
+  UserPlus,
+  FolderTree,
+  Info,
+  Phone,
+} from "lucide-react";
 
 const MobileMenu = ({ isOpen, onClose }) => {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   const handleLogout = async () => {
-    await logout()
-    onClose()
-  }
+    await logout();
+    onClose();
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 md:hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       />
-      
+
       {/* Menu Panel */}
       <div className="relative w-80 h-full bg-white shadow-lg">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">BH</span>
+              <span className="text-white font-bold text-sm">ML</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">Bach Hoa</span>
+            <span className="text-xl font-bold text-gray-900">Memory Lane</span>
           </div>
           <button
             onClick={onClose}
@@ -124,7 +135,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                   <User className="w-5 h-5" />
                   <span>Tài khoản</span>
                 </Link>
-                
+
                 <Link
                   to="/customer/orders"
                   onClick={onClose}
@@ -144,7 +155,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                   <LogIn className="w-5 h-5" />
                   <span>Đăng nhập</span>
                 </Link>
-                
+
                 <Link
                   to="/auth/register"
                   onClick={onClose}
@@ -171,7 +182,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MobileMenu
+export default MobileMenu;

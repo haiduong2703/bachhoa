@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useCartStore } from '../../store/cartStore'
-import { useAuthStore } from '../../store/authStore'
-import { formatPrice } from '../../data/mockData'
-import { orderAPI } from '../../services/api'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCartStore } from "../../store/cartStore";
+import { useAuthStore } from "../../store/authStore";
+import { formatPrice } from "../../data/mockData";
+import { orderAPI } from "../../services/api";
 import {
   ArrowLeft,
   MapPin,
@@ -13,78 +13,72 @@ import {
   Truck,
   Package,
   CheckCircle,
-  AlertCircle
-} from 'lucide-react'
-import toast from 'react-hot-toast'
+  AlertCircle,
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 const CheckoutPage = () => {
-  const navigate = useNavigate()
-  const { user, isAuthenticated } = useAuthStore()
-  const {
-    items,
-    getSubtotal,
-    getTotal,
-    coupon,
-    clearCart
-  } = useCartStore()
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuthStore();
+  const { items, getSubtotal, getTotal, coupon, clearCart } = useCartStore();
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     // Customer info
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
 
     // Shipping address
-    addressLine1: '',
-    ward: '',
-    district: '',
-    city: '',
+    addressLine1: "",
+    ward: "",
+    district: "",
+    city: "",
 
     // Payment
-    paymentMethod: 'cod',
+    paymentMethod: "cod",
 
     // Notes
-    notes: ''
-  })
+    notes: "",
+  });
 
   useEffect(() => {
     // Redirect if cart is empty
     if (items.length === 0) {
-      navigate('/cart')
-      return
+      navigate("/cart");
+      return;
     }
 
     // Pre-fill form if user is logged in
     if (isAuthenticated && user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || ''
-      }))
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      }));
     }
-  }, [items.length, navigate, isAuthenticated, user])
+  }, [items.length, navigate, isAuthenticated, user]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (items.length === 0) {
-      toast.error('Giỏ hàng trống')
-      return
+      toast.error("Giỏ hàng trống");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       const orderData = {
@@ -100,14 +94,14 @@ const CheckoutPage = () => {
           addressLine1: formData.addressLine1,
           ward: formData.ward,
           district: formData.district,
-          city: formData.city
+          city: formData.city,
         },
 
         // Order items
-        items: items.map(item => ({
+        items: items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
         })),
 
         // Payment and totals
@@ -115,50 +109,71 @@ const CheckoutPage = () => {
         subtotal: getSubtotal(),
         shippingFee: 30000, // Fixed shipping fee
         total: getTotal() + 30000, // Add shipping to total
-        notes: formData.notes || '',
+        notes: formData.notes || "",
 
         // Coupon if applied
         ...(coupon && {
           couponCode: coupon.code,
-          discountAmount: getSubtotal() - getTotal()
-        })
+          discountAmount: getSubtotal() - getTotal(),
+        }),
+      };
+
+      console.log("Creating order:", orderData);
+
+      // Handle VNPAY payment
+      if (formData.paymentMethod === "vnpay") {
+        const response = await orderAPI.createOrderWithVNPay(orderData);
+        console.log("Order with VNPAY created:", response.data);
+
+        // Clear cart before redirecting to payment
+        clearCart();
+
+        // Redirect to VNPAY payment page
+        const paymentUrl =
+          response.data?.data?.paymentUrl || response.data?.paymentUrl;
+        if (paymentUrl) {
+          console.log("Redirecting to VNPAY:", paymentUrl);
+          window.location.href = paymentUrl;
+        } else {
+          console.error("No payment URL in response:", response.data);
+          toast.error("Không thể tạo link thanh toán");
+        }
+        return;
       }
 
-      console.log('Creating order:', orderData)
-
-      const response = await orderAPI.createOrder(orderData)
-      console.log('Order created:', response.data)
+      // Handle COD payment
+      const response = await orderAPI.createOrder(orderData);
+      console.log("Order created:", response.data);
 
       // Clear cart after successful order
-      await clearCart()
+      clearCart();
 
-      toast.success('Đặt hàng thành công!')
+      toast.success("Đặt hàng thành công!");
 
       // Redirect to order confirmation or orders page
       if (isAuthenticated) {
-        navigate('/customer/orders')
+        navigate("/customer/orders");
       } else {
-        navigate('/products')
+        navigate("/products");
       }
-
     } catch (error) {
-      console.error('Checkout error:', error)
-      toast.error(error.response?.data?.message || 'Không thể đặt hàng')
+      console.error("Checkout error:", error);
+      toast.error(error.response?.data?.message || "Không thể đặt hàng");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const subtotal = getSubtotal()
-  const shippingFee = 30000
-  const total = getTotal() + shippingFee
+  const subtotal = getSubtotal();
+  const shippingFee = 30000;
+  const total = getTotal() + shippingFee;
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex items-center mb-8">
         <button
-          onClick={() => navigate('/cart')}
+          onClick={() => navigate("/cart")}
           className="mr-4 p-2 text-gray-600 hover:text-gray-800"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -166,7 +181,10 @@ const CheckoutPage = () => {
         <h1 className="text-3xl font-bold text-gray-900">Thanh toán</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
         {/* Left Column - Customer Info & Shipping */}
         <div className="lg:col-span-2 space-y-8">
           {/* Customer Information */}
@@ -320,30 +338,44 @@ const CheckoutPage = () => {
                   type="radio"
                   name="paymentMethod"
                   value="cod"
-                  checked={formData.paymentMethod === 'cod'}
+                  checked={formData.paymentMethod === "cod"}
                   onChange={handleInputChange}
                   className="mr-4"
                 />
                 <Truck className="w-5 h-5 text-gray-600 mr-3" />
                 <div>
-                  <div className="font-medium text-gray-900">Thanh toán khi nhận hàng (COD)</div>
-                  <div className="text-sm text-gray-500">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                  <div className="font-medium text-gray-900">
+                    Thanh toán khi nhận hàng (COD)
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Thanh toán bằng tiền mặt khi nhận hàng
+                  </div>
                 </div>
               </label>
 
-              <label className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 opacity-50">
+              <label className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
                 <input
                   type="radio"
                   name="paymentMethod"
-                  value="online"
-                  disabled
+                  value="vnpay"
+                  checked={formData.paymentMethod === "vnpay"}
+                  onChange={handleInputChange}
                   className="mr-4"
                 />
                 <CreditCard className="w-5 h-5 text-gray-600 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">Thanh toán online</div>
-                  <div className="text-sm text-gray-500">Thẻ tín dụng, ví điện tử (Sắp ra mắt)</div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">
+                    Thanh toán qua VNPAY
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Thẻ ATM, Visa, MasterCard, JCB, QR Code
+                  </div>
                 </div>
+                <img
+                  src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/06ncktiwd6dc1694418196384.png"
+                  alt="VNPAY"
+                  className="h-8"
+                />
               </label>
             </div>
           </div>
@@ -374,17 +406,22 @@ const CheckoutPage = () => {
 
             {/* Order Items */}
             <div className="space-y-4 mb-6">
-              {items.map(item => (
-                <div key={item.productId} className="flex items-center space-x-3">
+              {items.map((item) => (
+                <div
+                  key={item.productId}
+                  className="flex items-center space-x-3"
+                >
                   <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      src={item.image || '/placeholder-product.jpg'}
+                      src={item.image || "/placeholder-product.jpg"}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
+                    <h4 className="font-medium text-gray-900 text-sm">
+                      {item.name}
+                    </h4>
                     <p className="text-sm text-gray-500">
                       {item.quantity} x {formatPrice(item.price)}
                     </p>
@@ -445,7 +482,10 @@ const CheckoutPage = () => {
                 <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 mr-2" />
                 <div className="text-xs text-blue-800">
                   <p className="font-medium mb-1">Thông tin được bảo mật</p>
-                  <p>Thông tin cá nhân và thanh toán của bạn được mã hóa và bảo vệ an toàn.</p>
+                  <p>
+                    Thông tin cá nhân và thanh toán của bạn được mã hóa và bảo
+                    vệ an toàn.
+                  </p>
                 </div>
               </div>
             </div>
@@ -453,7 +493,7 @@ const CheckoutPage = () => {
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default CheckoutPage
+export default CheckoutPage;

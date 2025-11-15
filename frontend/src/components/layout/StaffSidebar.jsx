@@ -1,54 +1,55 @@
-import { Link, useLocation } from 'react-router-dom'
-import { useAuthStore } from '../../store/authStore'
-import { 
-  BarChart3, 
-  Package, 
+import { Link, useLocation } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
+import {
+  BarChart3,
+  Package,
   ShoppingBag,
   Plus,
   User,
-  X
-} from 'lucide-react'
-import { cn } from '../../utils/cn'
+  X,
+  Home,
+} from "lucide-react";
+import { cn } from "../../utils/cn";
 
 const StaffSidebar = ({ onClose }) => {
-  const location = useLocation()
-  const { user } = useAuthStore()
+  const location = useLocation();
+  const { user } = useAuthStore();
 
   const menuItems = [
     {
-      label: 'Dashboard',
-      path: '/staff',
+      label: "Dashboard",
+      path: "/staff",
       icon: BarChart3,
-      exact: true
+      exact: true,
     },
     {
-      label: 'Đơn hàng',
-      path: '/staff/orders',
-      icon: ShoppingBag
+      label: "Đơn hàng",
+      path: "/staff/orders",
+      icon: ShoppingBag,
     },
     {
-      label: 'Tạo đơn hàng',
-      path: '/staff/orders/create',
-      icon: Plus
+      label: "Tạo đơn hàng",
+      path: "/staff/orders/create",
+      icon: Plus,
     },
     {
-      label: 'Sản phẩm',
-      path: '/staff/products',
-      icon: Package
+      label: "Sản phẩm",
+      path: "/staff/products",
+      icon: Package,
     },
     {
-      label: 'Thông tin cá nhân',
-      path: '/staff/profile',
-      icon: User
-    }
-  ]
+      label: "Thông tin cá nhân",
+      path: "/staff/profile",
+      icon: User,
+    },
+  ];
 
   const isActive = (path, exact = false) => {
     if (exact) {
-      return location.pathname === path
+      return location.pathname === path;
     }
-    return location.pathname.startsWith(path)
-  }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -58,9 +59,11 @@ const StaffSidebar = ({ onClose }) => {
           <div>
             <div className="flex items-center space-x-2 mb-2">
               <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">BH</span>
+                <span className="text-white font-bold text-sm">ML</span>
               </div>
-              <span className="text-lg font-bold text-gray-900">Staff Panel</span>
+              <span className="text-lg font-bold text-gray-900">
+                Staff Panel
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
@@ -76,7 +79,7 @@ const StaffSidebar = ({ onClose }) => {
               </div>
             </div>
           </div>
-          
+
           {onClose && (
             <button
               onClick={onClose}
@@ -92,26 +95,26 @@ const StaffSidebar = ({ onClose }) => {
       <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-1">
           {menuItems.map((item) => {
-            const Icon = item.icon
-            const active = isActive(item.path, item.exact)
-            
+            const Icon = item.icon;
+            const active = isActive(item.path, item.exact);
+
             return (
               <li key={item.path}>
                 <Link
                   to={item.path}
                   onClick={onClose}
                   className={cn(
-                    'flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                    "flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                     active
-                      ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-500'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? "bg-primary-50 text-primary-700 border-r-2 border-primary-500"
+                      : "text-gray-700 hover:bg-gray-100"
                   )}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
                 </Link>
               </li>
-            )
+            );
           })}
         </ul>
       </nav>
@@ -119,12 +122,12 @@ const StaffSidebar = ({ onClose }) => {
       {/* Footer */}
       <div className="p-4 border-t border-gray-200">
         <div className="text-xs text-gray-500 text-center">
-          <p>Bach Hoa Store</p>
+          <p>Memory Lane</p>
           <p>Staff Dashboard v1.0</p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default StaffSidebar
+export default StaffSidebar;

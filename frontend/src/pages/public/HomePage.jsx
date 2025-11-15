@@ -1,11 +1,18 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import useProductStore from '../../store/productStore'
-import { useCartStore } from '../../store/cartStore'
-import { formatPrice, getDiscountPercentage } from '../../data/mockData'
-import { Star, ShoppingCart, ArrowRight, Truck, Shield, Clock } from 'lucide-react'
-import { productsAPI } from '../../services/api'
-import ApiTest from '../../components/debug/ApiTest'
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import useProductStore from "../../store/productStore";
+import { useCartStore } from "../../store/cartStore";
+import { formatPrice, getDiscountPercentage } from "../../data/mockData";
+import {
+  Star,
+  ShoppingCart,
+  ArrowRight,
+  Truck,
+  Shield,
+  Clock,
+} from "lucide-react";
+import { productsAPI } from "../../services/api";
+import ApiTest from "../../components/debug/ApiTest";
 
 const HomePage = () => {
   const {
@@ -13,34 +20,37 @@ const HomePage = () => {
     categories,
     isLoading,
     fetchFeaturedProducts,
-    fetchCategories
-  } = useProductStore()
+    fetchCategories,
+  } = useProductStore();
 
-  const { addItem } = useCartStore()
+  const { addItem } = useCartStore();
 
   useEffect(() => {
-    console.log('HomePage: useEffect triggered')
-    console.log('fetchFeaturedProducts:', fetchFeaturedProducts)
-    console.log('fetchCategories:', fetchCategories)
-    console.log('featuredProducts:', featuredProducts)
-    console.log('categories:', categories)
-    console.log('isLoading:', isLoading)
+    console.log("HomePage: useEffect triggered");
+    console.log("fetchFeaturedProducts:", fetchFeaturedProducts);
+    console.log("fetchCategories:", fetchCategories);
+    console.log("featuredProducts:", featuredProducts);
+    console.log("categories:", categories);
+    console.log("isLoading:", isLoading);
 
     // Test direct API call
-    productsAPI.getFeaturedProducts().then(response => {
-      console.log('Direct API call success:', response.data);
-    }).catch(err => {
-      console.error('Direct API call failed:', err);
+    productsAPI
+      .getFeaturedProducts()
+      .then((response) => {
+        console.log("Direct API call success:", response.data);
+      })
+      .catch((err) => {
+        console.error("Direct API call failed:", err);
+      });
+
+    fetchFeaturedProducts().catch((err) => {
+      console.error("Failed to fetch featured products:", err);
     });
 
-    fetchFeaturedProducts().catch(err => {
-      console.error('Failed to fetch featured products:', err)
-    })
-
-    fetchCategories().catch(err => {
-      console.error('Failed to fetch categories:', err)
-    })
-  }, [fetchFeaturedProducts, fetchCategories])
+    fetchCategories().catch((err) => {
+      console.error("Failed to fetch categories:", err);
+    });
+  }, [fetchFeaturedProducts, fetchCategories]);
 
   return (
     <div className="min-h-screen">
@@ -50,11 +60,9 @@ const HomePage = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Bach Hoa Store
-          </h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">Memory Lane</h1>
           <p className="text-xl md:text-2xl mb-8 text-blue-100">
-            Cửa hàng bách hóa trực tuyến hiện đại
+            Nơi lưu giữ những kỷ niệm đẹp từ quê hương
           </p>
           <Link
             to="/products"
@@ -71,10 +79,11 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Tại sao chọn Bach Hoa Store?
+              Tại sao chọn Memory Lane?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Chúng tôi cam kết mang đến cho bạn trải nghiệm mua sắm tuyệt vời nhất
+              Chúng tôi cam kết mang đến cho bạn những món quà lưu niệm ý nghĩa
+              và chân thực nhất
             </p>
           </div>
 
@@ -83,24 +92,32 @@ const HomePage = () => {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Chất lượng cao</h3>
-              <p className="text-gray-600">Sản phẩm tươi ngon, được chọn lọc kỹ càng</p>
+              <h3 className="text-xl font-semibold mb-2">
+                Hàng thủ công chính gốc
+              </h3>
+              <p className="text-gray-600">
+                Sản phẩm được tuyển chọn từ các nghệ nhân uy tín
+              </p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Truck className="w-8 h-8 text-orange-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Giao hàng nhanh</h3>
-              <p className="text-gray-600">Giao hàng trong ngày, tận nơi</p>
+              <h3 className="text-xl font-semibold mb-2">Giao hàng toàn cầu</h3>
+              <p className="text-gray-600">
+                Đóng gói cẩn thận, ship toàn thế giới
+              </p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Giá cả hợp lý</h3>
-              <p className="text-gray-600">Giá tốt nhất thị trường, nhiều ưu đãi</p>
+              <h3 className="text-xl font-semibold mb-2">Giá trị văn hóa</h3>
+              <p className="text-gray-600">
+                Mỗi sản phẩm đều chứa đựng câu chuyện riêng
+              </p>
             </div>
           </div>
         </div>
@@ -114,14 +131,17 @@ const HomePage = () => {
               Sản phẩm nổi bật
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Những sản phẩm được yêu thích nhất tại Bach Hoa Store
+              Những món quà lưu niệm được khách hàng yêu thích nhất
             </p>
           </div>
 
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse"
+                >
                   <div className="w-full h-48 bg-gray-200"></div>
                   <div className="p-4">
                     <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -137,18 +157,29 @@ const HomePage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {(featuredProducts || []).map((product) => (
-                <div key={product.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                <div
+                  key={product.id}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
+                >
                   <div className="relative">
                     <Link to={`/products/${product.slug}`}>
                       <img
-                        src={product.images?.[0]?.imageUrl || 'https://via.placeholder.com/400x300'}
+                        src={
+                          product.images?.[0]?.imageUrl ||
+                          "https://via.placeholder.com/400x300"
+                        }
                         alt={product.images?.[0]?.altText || product.name}
                         className="w-full h-48 object-cover"
                       />
                     </Link>
                     {product.comparePrice && (
                       <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-medium">
-                        -{getDiscountPercentage(product.price, product.comparePrice)}%
+                        -
+                        {getDiscountPercentage(
+                          product.price,
+                          product.comparePrice
+                        )}
+                        %
                       </div>
                     )}
                   </div>
@@ -177,7 +208,7 @@ const HomePage = () => {
 
                       <button
                         onClick={() => addItem(product.id, 1)}
-                        disabled={product.status !== 'active'}
+                        disabled={product.status !== "active"}
                         className="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShoppingCart className="w-4 h-4 mr-1" />
@@ -223,7 +254,7 @@ const HomePage = () => {
               >
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-gray-100 group-hover:shadow-lg transition-shadow duration-200">
                   <img
-                    src={category.image || 'https://via.placeholder.com/80x80'}
+                    src={category.image || "https://via.placeholder.com/80x80"}
                     alt={category.name}
                     className="w-full h-full object-cover"
                   />
@@ -244,7 +275,8 @@ const HomePage = () => {
             Bắt đầu mua sắm ngay hôm nay
           </h2>
           <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
-            Đăng ký tài khoản để nhận được những ưu đãi đặc biệt và trải nghiệm mua sắm tuyệt vời
+            Đăng ký tài khoản để nhận được những ưu đãi đặc biệt và trải nghiệm
+            mua sắm tuyệt vời
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -263,7 +295,7 @@ const HomePage = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default HomePage
+export default HomePage;

@@ -1,30 +1,28 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   ShoppingCart,
   Package,
   Heart,
-  MapPin,
   Star,
   Clock,
   Eye,
   User,
   CreditCard,
-  Truck
-} from 'lucide-react'
-import { useAuthStore } from '../../store/authStore'
-import { formatPrice } from '../../data/mockData'
+  Truck,
+} from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
+import { formatPrice } from "../../data/mockData";
 
 const CustomerDashboard = () => {
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
     completedOrders: 0,
     totalSpent: 0,
-    savedAddresses: 0,
-    wishlistItems: 0
-  })
+    wishlistItems: 0,
+  });
 
   // Real data from database - for customer@bachhoa.com
   useEffect(() => {
@@ -35,13 +33,19 @@ const CustomerDashboard = () => {
         pendingOrders: 0, // Real: 0 pending orders
         completedOrders: 1, // Real: 1 delivered order
         totalSpent: 187000, // Real: 187,000đ spent
-        savedAddresses: 1, // Real: 1 saved address
-        wishlistItems: 0 // Real: 0 wishlist items
-      })
-    }, 1000)
-  }, [])
+        wishlistItems: 0, // Real: 0 wishlist items
+      });
+    }, 1000);
+  }, []);
 
-  const StatCard = ({ title, value, icon: Icon, color = 'blue', link, description }) => (
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    color = "blue",
+    link,
+    description,
+  }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
         <div>
@@ -66,9 +70,15 @@ const CustomerDashboard = () => {
         </div>
       )}
     </div>
-  )
+  );
 
-  const QuickAction = ({ title, description, icon: Icon, link, color = 'blue' }) => (
+  const QuickAction = ({
+    title,
+    description,
+    icon: Icon,
+    link,
+    color = "blue",
+  }) => (
     <Link
       to={link}
       className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
@@ -83,7 +93,7 @@ const CustomerDashboard = () => {
         </div>
       </div>
     </Link>
-  )
+  );
 
   const RecentOrder = ({ id, status, total, items, date }) => (
     <div className="flex items-center justify-between p-4 border-b border-gray-100 last:border-b-0">
@@ -97,25 +107,40 @@ const CustomerDashboard = () => {
         </div>
       </div>
       <div className="text-right">
-        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-          status === 'processing' ? 'bg-blue-100 text-blue-800' :
-          status === 'shipping' ? 'bg-purple-100 text-purple-800' :
-          status === 'completed' ? 'bg-green-100 text-green-800' :
-          status === 'delivered' ? 'bg-green-100 text-green-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
-          {status === 'pending' ? 'Chờ xử lý' :
-           status === 'processing' ? 'Đang xử lý' :
-           status === 'shipping' ? 'Đang giao' :
-           status === 'completed' ? 'Hoàn thành' :
-           status === 'delivered' ? 'Đã giao' : status}
+        <div
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            status === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : status === "processing"
+              ? "bg-blue-100 text-blue-800"
+              : status === "shipping"
+              ? "bg-purple-100 text-purple-800"
+              : status === "completed"
+              ? "bg-green-100 text-green-800"
+              : status === "delivered"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {status === "pending"
+            ? "Chờ xử lý"
+            : status === "processing"
+            ? "Đang xử lý"
+            : status === "shipping"
+            ? "Đang giao"
+            : status === "completed"
+            ? "Hoàn thành"
+            : status === "delivered"
+            ? "Đã giao"
+            : status}
         </div>
-        <p className="text-sm font-medium text-gray-900 mt-1">{formatPrice(total)}</p>
+        <p className="text-sm font-medium text-gray-900 mt-1">
+          {formatPrice(total)}
+        </p>
         <p className="text-xs text-gray-500">{date}</p>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -126,7 +151,7 @@ const CustomerDashboard = () => {
             Xin chào, {user?.firstName}!
           </h1>
           <p className="text-gray-600 mt-1">
-            Chào mừng bạn đến với tài khoản Bach Hoa Store
+            Chào mừng bạn đến với tài khoản Memory Lane
           </p>
         </div>
         <div className="flex space-x-3">
@@ -178,7 +203,9 @@ const CustomerDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Thao tác nhanh</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Thao tác nhanh
+          </h2>
           <div className="space-y-4">
             <QuickAction
               title="Xem đơn hàng"
@@ -195,13 +222,6 @@ const CustomerDashboard = () => {
               color="green"
             />
             <QuickAction
-              title="Quản lý địa chỉ"
-              description="Thêm/sửa địa chỉ giao hàng"
-              icon={MapPin}
-              link="/customer/addresses"
-              color="purple"
-            />
-            <QuickAction
               title="Đánh giá sản phẩm"
               description="Viết đánh giá cho sản phẩm đã mua"
               icon={Star}
@@ -214,7 +234,9 @@ const CustomerDashboard = () => {
         {/* Recent Orders */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Đơn hàng gần đây</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Đơn hàng gần đây
+            </h2>
             <Link
               to="/customer/orders"
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
@@ -224,7 +246,7 @@ const CustomerDashboard = () => {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <RecentOrder
-              id="BH1755847565747001"
+              id="ML1755847565747001"
               status="delivered"
               total={187000}
               items={2}
@@ -243,25 +265,23 @@ const CustomerDashboard = () => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Chào mừng bạn đến với Bach Hoa Store!
+                Chào mừng bạn đến với Memory Lane!
               </h3>
               <p className="text-gray-600 mt-1">
-                Hãy bắt đầu mua sắm để trải nghiệm dịch vụ tuyệt vời của chúng tôi.
+                Khám phá những món quà lưu niệm độc đáo mang đậm bản sắc văn hóa
+                Việt Nam.
               </p>
             </div>
           </div>
           <div className="mt-4">
-            <Link
-              to="/products"
-              className="btn btn-primary"
-            >
+            <Link to="/products" className="btn btn-primary">
               Khám phá sản phẩm
             </Link>
           </div>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default CustomerDashboard
+export default CustomerDashboard;

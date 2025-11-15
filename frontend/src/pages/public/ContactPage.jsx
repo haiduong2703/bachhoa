@@ -1,73 +1,75 @@
-import { useState } from 'react'
-import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { useState } from "react";
+import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from "lucide-react";
+import toast from "react-hot-toast";
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const contactInfo = [
     {
       icon: MapPin,
-      title: 'Địa chỉ',
-      content: '322 Lê Trọng Tấn, Khương Mai, Hà Nội',
-      subContent: 'Tầng 1-2, Tòa nhà Bach Hoa Center'
+      title: "Địa chỉ",
+      content: "12 Hàng Gai, Hoàn Kiếm, Hà Nội",
+      subContent: "Showroom Memory Lane - Phố Cổ Hà Nội",
     },
     {
       icon: Phone,
-      title: 'Điện thoại',
-      content: '1900 1234',
-      subContent: 'Hotline hỗ trợ 24/7'
+      title: "Điện thoại",
+      content: "1900 1234",
+      subContent: "Hotline hỗ trợ 24/7",
     },
     {
       icon: Mail,
-      title: 'Email',
-      content: 'support@bachhoa.com',
-      subContent: 'Phản hồi trong vòng 24h'
+      title: "Email",
+      content: "support@memorylane.com",
+      subContent: "Phản hồi trong vòng 24h",
     },
     {
       icon: Clock,
-      title: 'Giờ làm việc',
-      content: 'Thứ 2 - Chủ nhật',
-      subContent: '8:00 - 22:00'
-    }
-  ]
+      title: "Giờ làm việc",
+      content: "Thứ 2 - Chủ nhật",
+      subContent: "8:00 - 22:00",
+    },
+  ];
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Tin nhắn đã được gửi thành công! Chúng tôi sẽ phản hồi sớm nhất.')
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success(
+        "Tin nhắn đã được gửi thành công! Chúng tôi sẽ phản hồi sớm nhất."
+      );
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      })
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+      });
     } catch (error) {
-      toast.error('Có lỗi xảy ra. Vui lòng thử lại sau.')
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen">
@@ -78,8 +80,8 @@ const ContactPage = () => {
             Liên hệ với chúng tôi
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
-            Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Hãy liên hệ với chúng tôi
-            qua bất kỳ kênh nào thuận tiện nhất.
+            Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Hãy liên hệ với
+            chúng tôi qua bất kỳ kênh nào thuận tiện nhất.
           </p>
         </div>
       </section>
@@ -89,7 +91,7 @@ const ContactPage = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {contactInfo.map((info, index) => {
-              const Icon = info.icon
+              const Icon = info.icon;
               return (
                 <div key={index} className="text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -101,11 +103,9 @@ const ContactPage = () => {
                   <p className="text-gray-900 font-medium mb-1">
                     {info.content}
                   </p>
-                  <p className="text-gray-600 text-sm">
-                    {info.subContent}
-                  </p>
+                  <p className="text-gray-600 text-sm">{info.subContent}</p>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -122,14 +122,18 @@ const ContactPage = () => {
                   Gửi tin nhắn cho chúng tôi
                 </h2>
                 <p className="text-gray-600">
-                  Điền thông tin vào form bên dưới và chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+                  Điền thông tin vào form bên dưới và chúng tôi sẽ phản hồi
+                  trong thời gian sớm nhất.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Họ và tên *
                     </label>
                     <input
@@ -145,7 +149,10 @@ const ContactPage = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Số điện thoại
                     </label>
                     <input
@@ -161,7 +168,10 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email *
                   </label>
                   <input
@@ -177,7 +187,10 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Chủ đề *
                   </label>
                   <select
@@ -199,7 +212,10 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Nội dung tin nhắn *
                   </label>
                   <textarea
@@ -245,7 +261,9 @@ const ContactPage = () => {
                   <div className="text-center">
                     <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                     <p className="text-gray-500">Bản đồ Google Maps</p>
-                    <p className="text-sm text-gray-400">322 Lê Trọng Tấn, Khương Mai, Hà Nội</p>
+                    <p className="text-sm text-gray-400">
+                      322 Lê Trọng Tấn, Khương Mai, Hà Nội
+                    </p>
                   </div>
                 </div>
               </div>
@@ -261,8 +279,8 @@ const ContactPage = () => {
                       Thời gian giao hàng là bao lâu?
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Chúng tôi giao hàng trong ngày cho đơn hàng đặt trước 15:00,
-                      và trong vòng 24h cho các đơn hàng khác.
+                      Chúng tôi giao hàng trong ngày cho đơn hàng đặt trước
+                      15:00, và trong vòng 24h cho các đơn hàng khác.
                     </p>
                   </div>
 
@@ -271,8 +289,8 @@ const ContactPage = () => {
                       Có thể đổi trả hàng không?
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Có, bạn có thể đổi trả trong vòng 7 ngày nếu sản phẩm
-                      có vấn đề về chất lượng.
+                      Có, bạn có thể đổi trả trong vòng 7 ngày nếu sản phẩm có
+                      vấn đề về chất lượng.
                     </p>
                   </div>
 
@@ -301,8 +319,8 @@ const ContactPage = () => {
               Cần hỗ trợ ngay lập tức?
             </h2>
             <p className="text-blue-100 mb-8">
-              Liên hệ hotline 1900 1234 để được hỗ trợ trực tiếp từ đội ngũ chăm sóc khách hàng
-              chuyên nghiệp của chúng tôi.
+              Liên hệ hotline 1900 1234 để được hỗ trợ trực tiếp từ đội ngũ chăm
+              sóc khách hàng chuyên nghiệp của chúng tôi.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
@@ -313,18 +331,18 @@ const ContactPage = () => {
                 Gọi ngay: 1900 1234
               </a>
               <a
-                href="mailto:support@bachhoa.com"
+                href="mailto:support@memorylane.com"
                 className="inline-flex items-center px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-blue-600 font-semibold rounded-lg transition-colors duration-200"
               >
                 <Mail className="w-4 h-4 mr-2" />
-                Email: support@bachhoa.com
+                Email: support@memorylane.com
               </a>
             </div>
           </div>
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default ContactPage
+export default ContactPage;

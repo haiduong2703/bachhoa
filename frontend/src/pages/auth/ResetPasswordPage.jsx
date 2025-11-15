@@ -1,105 +1,105 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
-import { authAPI } from '../../services/api'
-import toast from 'react-hot-toast'
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
+import { authAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const ResetPasswordPage = () => {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const token = searchParams.get('token')
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
 
   const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isTokenValid, setIsTokenValid] = useState(null)
-  const [isSuccess, setIsSuccess] = useState(false)
+    password: "",
+    confirmPassword: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (!token) {
-      setIsTokenValid(false)
-      return
+      setIsTokenValid(false);
+      return;
     }
 
     // Verify token validity
-    verifyToken()
-  }, [token])
+    verifyToken();
+  }, [token]);
 
   const verifyToken = async () => {
     try {
-      await authAPI.verifyResetToken(token)
-      setIsTokenValid(true)
+      await authAPI.verifyResetToken(token);
+      setIsTokenValid(true);
     } catch (error) {
-      setIsTokenValid(false)
-      toast.error('Link khôi phục không hợp lệ hoặc đã hết hạn')
+      setIsTokenValid(false);
+      toast.error("Link khôi phục không hợp lệ hoặc đã hết hạn");
     }
-  }
+  };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const validatePassword = (password) => {
     if (password.length < 6) {
-      return 'Mật khẩu phải có ít nhất 6 ký tự'
+      return "Mật khẩu phải có ít nhất 6 ký tự";
     }
-    return null
-  }
+    return null;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const { password, confirmPassword } = formData
+    const { password, confirmPassword } = formData;
 
     // Validation
     if (!password || !confirmPassword) {
-      toast.error('Vui lòng điền đầy đủ thông tin')
-      return
+      toast.error("Vui lòng điền đầy đủ thông tin");
+      return;
     }
 
-    const passwordError = validatePassword(password)
+    const passwordError = validatePassword(password);
     if (passwordError) {
-      toast.error(passwordError)
-      return
+      toast.error(passwordError);
+      return;
     }
 
     if (password !== confirmPassword) {
-      toast.error('Mật khẩu xác nhận không khớp')
-      return
+      toast.error("Mật khẩu xác nhận không khớp");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       await authAPI.resetPassword({
         token,
         password,
-        confirmPassword
-      })
+        confirmPassword,
+      });
 
-      setIsSuccess(true)
-      toast.success('Đặt lại mật khẩu thành công')
+      setIsSuccess(true);
+      toast.success("Đặt lại mật khẩu thành công");
 
       // Redirect to login after 3 seconds
       setTimeout(() => {
-        navigate('/auth/login')
-      }, 3000)
-
+        navigate("/auth/login");
+      }, 3000);
     } catch (error) {
-      const message = error.response?.data?.message || 'Không thể đặt lại mật khẩu'
-      toast.error(message)
+      const message =
+        error.response?.data?.message || "Không thể đặt lại mật khẩu";
+      toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Success state
   if (isSuccess) {
@@ -117,20 +117,18 @@ const ResetPasswordPage = () => {
               </h2>
 
               <p className="text-gray-600 mb-6">
-                Mật khẩu của bạn đã được cập nhật. Bạn có thể đăng nhập với mật khẩu mới.
+                Mật khẩu của bạn đã được cập nhật. Bạn có thể đăng nhập với mật
+                khẩu mới.
               </p>
 
-              <Link
-                to="/auth/login"
-                className="btn btn-primary w-full"
-              >
+              <Link to="/auth/login" className="btn btn-primary w-full">
                 Đăng nhập ngay
               </Link>
             </div>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Invalid token state
@@ -149,7 +147,8 @@ const ResetPasswordPage = () => {
               </h2>
 
               <p className="text-gray-600 mb-6">
-                Link khôi phục mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.
+                Link khôi phục mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng
+                yêu cầu link mới.
               </p>
 
               <div className="space-y-3">
@@ -160,10 +159,7 @@ const ResetPasswordPage = () => {
                   Yêu cầu link mới
                 </Link>
 
-                <Link
-                  to="/auth/login"
-                  className="btn btn-outline w-full"
-                >
+                <Link to="/auth/login" className="btn btn-outline w-full">
                   Quay lại đăng nhập
                 </Link>
               </div>
@@ -171,7 +167,7 @@ const ResetPasswordPage = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Loading state
@@ -182,7 +178,7 @@ const ResetPasswordPage = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -193,7 +189,9 @@ const ResetPasswordPage = () => {
             <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">B</span>
             </div>
-            <span className="text-2xl font-bold text-gray-900">Bach Hoa</span>
+            <span className="text-2xl font-bold text-gray-900">
+              Memory Lane
+            </span>
           </Link>
         </div>
 
@@ -210,7 +208,10 @@ const ResetPasswordPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* New Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Mật khẩu mới
               </label>
               <div className="mt-1 relative">
@@ -218,7 +219,7 @@ const ResetPasswordPage = () => {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.password}
@@ -231,7 +232,11 @@ const ResetPasswordPage = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
@@ -241,7 +246,10 @@ const ResetPasswordPage = () => {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Xác nhận mật khẩu
               </label>
               <div className="mt-1 relative">
@@ -249,7 +257,7 @@ const ResetPasswordPage = () => {
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
@@ -262,7 +270,11 @@ const ResetPasswordPage = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -276,7 +288,7 @@ const ResetPasswordPage = () => {
                 {isLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
-                  'Đặt lại mật khẩu'
+                  "Đặt lại mật khẩu"
                 )}
               </button>
             </div>
@@ -293,7 +305,7 @@ const ResetPasswordPage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ResetPasswordPage
+export default ResetPasswordPage;

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   ShoppingCart,
   Package,
@@ -9,19 +9,19 @@ import {
   Plus,
   Eye,
   Search,
-  User
-} from 'lucide-react'
-import { useAuthStore } from '../../store/authStore'
+  User,
+} from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 const StaffDashboard = () => {
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
   const [stats, setStats] = useState({
     todayOrders: 0,
     pendingOrders: 0,
     completedOrders: 0,
     totalProducts: 0,
-    lowStockProducts: 0
-  })
+    lowStockProducts: 0,
+  });
 
   // Real data from database
   useEffect(() => {
@@ -32,12 +32,19 @@ const StaffDashboard = () => {
         pendingOrders: 0, // Real: 0 pending orders
         completedOrders: 1, // Real: 1 completed order (delivered)
         totalProducts: 6, // Real: 6 products in database
-        lowStockProducts: 0 // Real: 0 low stock products (all have good stock)
-      })
-    }, 1000)
-  }, [])
+        lowStockProducts: 0, // Real: 0 low stock products (all have good stock)
+      });
+    }, 1000);
+  }, []);
 
-  const StatCard = ({ title, value, icon: Icon, color = 'blue', link, description }) => (
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    color = "blue",
+    link,
+    description,
+  }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
         <div>
@@ -62,9 +69,15 @@ const StaffDashboard = () => {
         </div>
       )}
     </div>
-  )
+  );
 
-  const QuickAction = ({ title, description, icon: Icon, link, color = 'blue' }) => (
+  const QuickAction = ({
+    title,
+    description,
+    icon: Icon,
+    link,
+    color = "blue",
+  }) => (
     <Link
       to={link}
       className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
@@ -79,7 +92,7 @@ const StaffDashboard = () => {
         </div>
       </div>
     </Link>
-  )
+  );
 
   const RecentOrder = ({ id, customer, status, total, time }) => (
     <div className="flex items-center justify-between p-4 border-b border-gray-100 last:border-b-0">
@@ -93,23 +106,34 @@ const StaffDashboard = () => {
         </div>
       </div>
       <div className="text-right">
-        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-          status === 'processing' ? 'bg-blue-100 text-blue-800' :
-          status === 'completed' ? 'bg-green-100 text-green-800' :
-          status === 'delivered' ? 'bg-green-100 text-green-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
-          {status === 'pending' ? 'Chờ xử lý' :
-           status === 'processing' ? 'Đang xử lý' :
-           status === 'completed' ? 'Hoàn thành' :
-           status === 'delivered' ? 'Đã giao' : status}
+        <div
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            status === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : status === "processing"
+              ? "bg-blue-100 text-blue-800"
+              : status === "completed"
+              ? "bg-green-100 text-green-800"
+              : status === "delivered"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {status === "pending"
+            ? "Chờ xử lý"
+            : status === "processing"
+            ? "Đang xử lý"
+            : status === "completed"
+            ? "Hoàn thành"
+            : status === "delivered"
+            ? "Đã giao"
+            : status}
         </div>
         <p className="text-sm text-gray-600 mt-1">{total}</p>
         <p className="text-xs text-gray-500">{time}</p>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="space-y-6">
@@ -120,7 +144,7 @@ const StaffDashboard = () => {
             Chào mừng, {user?.firstName}!
           </h1>
           <p className="text-gray-600 mt-1">
-            Bảng điều khiển nhân viên - Bach Hoa Store
+            Bảng điều khiển nhân viên - Memory Lane
           </p>
         </div>
         <div className="flex space-x-3">
@@ -173,7 +197,9 @@ const StaffDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Thao tác nhanh</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Thao tác nhanh
+          </h2>
           <div className="space-y-4">
             <QuickAction
               title="Tạo đơn hàng mới"
@@ -209,7 +235,9 @@ const StaffDashboard = () => {
         {/* Recent Orders */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Đơn hàng gần đây</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Đơn hàng gần đây
+            </h2>
             <Link
               to="/staff/orders"
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
@@ -219,7 +247,7 @@ const StaffDashboard = () => {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <RecentOrder
-              id="BH1755847565747001"
+              id="ML1755847565747001"
               customer="Khách Hàng"
               status="delivered"
               total="187,000đ"
@@ -229,7 +257,7 @@ const StaffDashboard = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default StaffDashboard
+export default StaffDashboard;

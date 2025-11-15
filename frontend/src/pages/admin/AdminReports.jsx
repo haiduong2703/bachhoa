@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Calendar,
   Download,
@@ -11,114 +11,132 @@ import {
   BarChart3,
   PieChart,
   Activity,
-  Filter
-} from 'lucide-react'
-import { reportsAPI } from '../../services/api'
-import { formatPrice } from '../../data/mockData'
-import toast from 'react-hot-toast'
+  Filter,
+} from "lucide-react";
+import { reportsAPI, statsAPI } from "../../services/api";
+import { formatPrice } from "../../data/mockData";
+import toast from "react-hot-toast";
 
 const AdminReports = () => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [dateRange, setDateRange] = useState('7days')
-  const [reportType, setReportType] = useState('overview')
-  const [dashboardStats, setDashboardStats] = useState({})
-  const [salesData, setSalesData] = useState([])
-  const [topProducts, setTopProducts] = useState([])
-  const [customerStats, setCustomerStats] = useState({})
+  const [isLoading, setIsLoading] = useState(true);
+  const [dateRange, setDateRange] = useState("7days");
+  const [reportType, setReportType] = useState("overview");
+  const [dashboardStats, setDashboardStats] = useState({});
+  const [salesData, setSalesData] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [customerStats, setCustomerStats] = useState({});
 
   useEffect(() => {
-    fetchReportsData()
-  }, [dateRange, reportType])
+    fetchReportsData();
+  }, [dateRange, reportType]);
 
   const fetchReportsData = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
-      // Real data from database
-      const realDashboardStats = {
-        totalRevenue: 187000,
-        totalOrders: 1,
-        totalCustomers: 4,
-        totalProducts: 6,
-        revenueGrowth: 15.2,
-        ordersGrowth: 8.5,
-        customersGrowth: 12.3,
-        productsGrowth: 5.1
-      }
+      // Fetch real data from API
+      const [dashboardResponse, topProductsResponse] = await Promise.all([
+        statsAPI.getDashboardStats(),
+        statsAPI.getTopProducts({ limit: 10 }),
+      ]);
 
-      const realSalesData = [
-        { date: '2025-08-22', revenue: 187000, orders: 1, customers: 1 }
-      ]
+      const dashboardData = dashboardResponse.data.data;
+      const topProductsData = topProductsResponse.data.data;
 
-      const realTopProducts = [
-        { id: 2, name: 'Thịt ba chỉ', sales: 1, revenue: 120000, growth: 13.2 },
-        { id: 1, name: 'Cà chua bi', sales: 2, revenue: 50000, growth: 18.7 }
-      ]
+      // Transform dashboard stats
+      setDashboardStats({
+        totalRevenue: dashboardData.totalRevenue || 0,
+        totalOrders: dashboardData.totalOrders || 0,
+        totalCustomers: dashboardData.totalUsers || 0,
+        totalProducts: dashboardData.totalProducts || 0,
+        revenueGrowth: dashboardData.trends?.revenue?.percentage || 0,
+        ordersGrowth: 0, // Can calculate from trends if needed
+        customersGrowth: 0,
+        productsGrowth: 0,
+      });
 
-      const realCustomerStats = {
-        newCustomers: 1,
-        returningCustomers: 3,
-        averageOrderValue: 187000,
-        customerLifetimeValue: 935000,
-        topCustomers: [
-          { name: 'Khách Hàng', orders: 1, spent: 187000 }
-        ]
-      }
+      // Transform top products
+      setTopProducts(
+        topProductsData.topProducts?.map((item) => ({
+          id: item.product?.id || item.productId,
+          name: item.product?.name || "N/A",
+          sales: parseInt(item.totalSold) || 0,
+          revenue: parseFloat(item.totalRevenue) || 0,
+          growth: 0, // Would need historical data
+        })) || []
+      );
 
-      setDashboardStats(realDashboardStats)
-      setSalesData(realSalesData)
-      setTopProducts(realTopProducts)
-      setCustomerStats(realCustomerStats)
+      // Set customer stats (using available data)
+      setCustomerStats({
+        newCustomers: dashboardData.totalUsers || 0,
+        returningCustomers: 0,
+        averageOrderValue:
+          dashboardData.totalOrders > 0
+            ? Math.round(dashboardData.totalRevenue / dashboardData.totalOrders)
+            : 0,
+        customerLifetimeValue: 0,
+        topCustomers: [],
+      });
+
+      // Sales data - for now empty, would need sales API
+      setSalesData([]);
     } catch (error) {
-      console.error('Failed to fetch reports data:', error)
-      toast.error('Không thể tải dữ liệu báo cáo')
+      console.error("Failed to fetch reports data:", error);
+      toast.error("Không thể tải dữ liệu báo cáo");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleExportReport = async () => {
     try {
-      toast.success('Đang xuất báo cáo...')
+      toast.success("Đang xuất báo cáo...");
       // await reportsAPI.exportSalesReport({ dateRange, reportType })
       // In real app, this would trigger a download
       setTimeout(() => {
-        toast.success('Xuất báo cáo thành công')
-      }, 2000)
+        toast.success("Xuất báo cáo thành công");
+      }, 2000);
     } catch (error) {
-      toast.error('Không thể xuất báo cáo')
+      toast.error("Không thể xuất báo cáo");
     }
-  }
+  };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const getGrowthIndicator = (growth) => {
-    const isPositive = growth > 0
+    const isPositive = growth > 0;
     return (
-      <div className={`flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-        {isPositive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+      <div
+        className={`flex items-center ${
+          isPositive ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {isPositive ? (
+          <TrendingUp className="w-4 h-4 mr-1" />
+        ) : (
+          <TrendingDown className="w-4 h-4 mr-1" />
+        )}
         <span className="text-sm font-medium">
-          {isPositive ? '+' : ''}{growth.toFixed(1)}%
+          {isPositive ? "+" : ""}
+          {growth.toFixed(1)}%
         </span>
       </div>
-    )
-  }
+    );
+  };
 
-  const StatCard = ({ title, value, growth, icon: Icon, color = 'blue' }) => (
+  const StatCard = ({ title, value, growth, icon: Icon, color = "blue" }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
           {growth !== undefined && (
-            <div className="mt-2">
-              {getGrowthIndicator(growth)}
-            </div>
+            <div className="mt-2">{getGrowthIndicator(growth)}</div>
           )}
         </div>
         <div className={`p-3 rounded-full bg-${color}-100`}>
@@ -126,12 +144,14 @@ const AdminReports = () => {
         </div>
       </div>
     </div>
-  )
+  );
 
   const SalesChart = () => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Doanh thu theo ngày</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Doanh thu theo ngày
+        </h3>
         <div className="flex items-center space-x-2">
           <BarChart3 className="w-5 h-5 text-gray-400" />
           <span className="text-sm text-gray-500">7 ngày qua</span>
@@ -140,8 +160,8 @@ const AdminReports = () => {
 
       <div className="space-y-4">
         {salesData.map((day, index) => {
-          const maxRevenue = Math.max(...salesData.map(d => d.revenue))
-          const percentage = (day.revenue / maxRevenue) * 100
+          const maxRevenue = Math.max(...salesData.map((d) => d.revenue));
+          const percentage = (day.revenue / maxRevenue) * 100;
 
           return (
             <div key={day.date} className="flex items-center space-x-4">
@@ -165,16 +185,18 @@ const AdminReports = () => {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 
   const TopProductsTable = () => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Sản phẩm bán chạy</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Sản phẩm bán chạy
+        </h3>
         <PieChart className="w-5 h-5 text-gray-400" />
       </div>
 
@@ -226,35 +248,45 @@ const AdminReports = () => {
         </table>
       </div>
     </div>
-  )
+  );
 
   const CustomerInsights = () => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Thông tin khách hàng</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Thông tin khách hàng
+        </h3>
         <Users className="w-5 h-5 text-gray-400" />
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="text-center p-4 bg-blue-50 rounded-lg">
-          <p className="text-2xl font-bold text-blue-600">{customerStats.newCustomers}</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {customerStats.newCustomers}
+          </p>
           <p className="text-sm text-gray-600">Khách hàng mới</p>
         </div>
         <div className="text-center p-4 bg-green-50 rounded-lg">
-          <p className="text-2xl font-bold text-green-600">{customerStats.returningCustomers}</p>
+          <p className="text-2xl font-bold text-green-600">
+            {customerStats.returningCustomers}
+          </p>
           <p className="text-sm text-gray-600">Khách hàng quay lại</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Giá trị đơn hàng trung bình</span>
+          <span className="text-sm text-gray-600">
+            Giá trị đơn hàng trung bình
+          </span>
           <span className="text-sm font-medium text-gray-900">
             {formatPrice(customerStats.averageOrderValue)}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Giá trị khách hàng trung bình</span>
+          <span className="text-sm text-gray-600">
+            Giá trị khách hàng trung bình
+          </span>
           <span className="text-sm font-medium text-gray-900">
             {formatPrice(customerStats.customerLifetimeValue)}
           </span>
@@ -262,7 +294,9 @@ const AdminReports = () => {
       </div>
 
       <div className="mt-6">
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Top khách hàng</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-3">
+          Top khách hàng
+        </h4>
         <div className="space-y-2">
           {customerStats.topCustomers?.map((customer, index) => (
             <div key={index} className="flex items-center justify-between py-2">
@@ -287,14 +321,14 @@ const AdminReports = () => {
         </div>
       </div>
     </div>
-  )
+  );
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -302,7 +336,9 @@ const AdminReports = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Báo cáo & Thống kê</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Báo cáo & Thống kê
+          </h1>
           <p className="text-gray-600 mt-1">
             Phân tích doanh thu và hiệu suất kinh doanh
           </p>
@@ -409,7 +445,7 @@ const AdminReports = () => {
         <TopProductsTable />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminReports
+export default AdminReports;

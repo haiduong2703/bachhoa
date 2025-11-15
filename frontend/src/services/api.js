@@ -1,278 +1,291 @@
-import axios from 'axios'
-import { useAuthStore } from '../store/authStore'
-import toast from 'react-hot-toast'
+import axios from "axios";
+import { useAuthStore } from "../store/authStore";
+import toast from "react-hot-toast";
 
 // Create axios instance
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-})
+});
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const { tokens } = useAuthStore.getState()
-    
+    const { tokens } = useAuthStore.getState();
+
     if (tokens?.accessToken) {
-      config.headers.Authorization = `Bearer ${tokens.accessToken}`
+      config.headers.Authorization = `Bearer ${tokens.accessToken}`;
     }
-    
-    return config
+
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
 // Response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => {
     // Check for new tokens in response headers
-    const newAccessToken = response.headers['x-new-access-token']
-    const newRefreshToken = response.headers['x-new-refresh-token']
-    
+    const newAccessToken = response.headers["x-new-access-token"];
+    const newRefreshToken = response.headers["x-new-refresh-token"];
+
     if (newAccessToken && newRefreshToken) {
-      const { setTokens } = useAuthStore.getState()
+      const { setTokens } = useAuthStore.getState();
       setTokens({
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken
-      })
+        refreshToken: newRefreshToken,
+      });
     }
-    
-    return response
+
+    return response;
   },
   async (error) => {
-    const originalRequest = error.config
-    
+    const originalRequest = error.config;
+
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      
-      const { tokens, logout, setTokens } = useAuthStore.getState()
-      
+      originalRequest._retry = true;
+
+      const { tokens, logout, setTokens } = useAuthStore.getState();
+
       if (tokens?.refreshToken) {
         try {
           const response = await axios.post(
             `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
             { refreshToken: tokens.refreshToken }
-          )
-          
-          const newTokens = response.data.data.tokens
-          setTokens(newTokens)
-          
+          );
+
+          const newTokens = response.data.data.tokens;
+          setTokens(newTokens);
+
           // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`
-          return api(originalRequest)
+          originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+          return api(originalRequest);
         } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError)
-          logout()
-          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+          console.error("Token refresh failed:", refreshError);
+          logout();
+          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
         }
       } else {
-        logout()
+        logout();
       }
     }
-    
-    return Promise.reject(error)
+
+    return Promise.reject(error);
   }
-)
+);
 
 // Auth API
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  logout: () => api.post('/auth/logout'),
-  refreshToken: (refreshToken) => api.post('/auth/refresh-token', { refreshToken }),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  verifyResetToken: (token) => api.get(`/auth/verify-reset-token?token=${token}`),
-  resetPassword: (data) => api.post('/auth/reset-password', data),
-  verifyEmail: (token) => api.post('/auth/verify-email', { token }),
-  resendVerification: (email) => api.post('/auth/resend-verification', { email }),
-  getProfile: () => api.get('/auth/profile'),
-  updateProfile: (data) => api.put('/auth/profile', data),
-  changePassword: (data) => api.put('/auth/change-password', data),
-}
+  login: (credentials) => api.post("/auth/login", credentials),
+  register: (userData) => api.post("/auth/register", userData),
+  logout: () => api.post("/auth/logout"),
+  refreshToken: (refreshToken) =>
+    api.post("/auth/refresh-token", { refreshToken }),
+  forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
+  verifyResetToken: (token) =>
+    api.get(`/auth/verify-reset-token?token=${token}`),
+  resetPassword: (data) => api.post("/auth/reset-password", data),
+  verifyEmail: (token) => api.post("/auth/verify-email", { token }),
+  resendVerification: (email) =>
+    api.post("/auth/resend-verification", { email }),
+  getProfile: () => api.get("/auth/profile"),
+  updateProfile: (data) => api.put("/auth/profile", data),
+  changePassword: (data) => api.put("/auth/change-password", data),
+};
 
 // Products API
 export const productsAPI = {
-  getProducts: (params) => api.get('/products', {
-    params,
-    headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    }
-  }),
+  getProducts: (params) =>
+    api.get("/products", {
+      params,
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
+    }),
   getProduct: (id) => api.get(`/products/${id}`),
-  getFeaturedProducts: (params) => api.get('/products/featured', {
-    params,
-    headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    }
-  }),
-  getProductsByCategory: (categoryId, params) => api.get(`/products/category/${categoryId}`, { params }),
-  createProduct: (data) => api.post('/products', data),
+  getFeaturedProducts: (params) =>
+    api.get("/products/featured", {
+      params,
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
+    }),
+  getProductsByCategory: (categoryId, params) =>
+    api.get(`/products/category/${categoryId}`, { params }),
+  createProduct: (data) => api.post("/products", data),
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/products/${id}`),
-  updateProductStatus: (id, status) => api.patch(`/products/${id}/status`, { status }),
-}
+  updateProductStatus: (id, status) =>
+    api.patch(`/products/${id}/status`, { status }),
+};
 
 // Categories API
 export const categoriesAPI = {
-  getCategories: (params) => api.get('/categories', { params }),
+  getCategories: (params) => api.get("/categories", { params }),
   getCategory: (id) => api.get(`/categories/${id}`),
-  getCategoryTree: () => api.get('/categories/tree'),
-  createCategory: (data) => api.post('/categories', data),
+  getCategoryTree: () => api.get("/categories/tree"),
+  createCategory: (data) => api.post("/categories", data),
   updateCategory: (id, data) => api.put(`/categories/${id}`, data),
   deleteCategory: (id) => api.delete(`/categories/${id}`),
-}
+};
 
 // Orders API
 // Cart API
 export const cartAPI = {
-  getCart: () => api.get('/cart'),
-  addToCart: (productId, quantity) => api.post('/cart/items', { productId, quantity }),
-  updateCartItem: (itemId, quantity) => api.put(`/cart/items/${itemId}`, { quantity }),
+  getCart: () => api.get("/cart"),
+  addToCart: (productId, quantity) =>
+    api.post("/cart/items", { productId, quantity }),
+  updateCartItem: (itemId, quantity) =>
+    api.put(`/cart/items/${itemId}`, { quantity }),
   removeFromCart: (itemId) => api.delete(`/cart/items/${itemId}`),
-  clearCart: () => api.delete('/cart'),
-  applyCoupon: (code) => api.post('/cart/coupon', { code }),
-  removeCoupon: () => api.delete('/cart/coupon'),
-}
+  clearCart: () => api.delete("/cart"),
+  applyCoupon: (code) => api.post("/cart/coupon", { code }),
+  removeCoupon: () => api.delete("/cart/coupon"),
+};
 
 // Users API (Admin)
 export const usersAPI = {
-  getUsers: (params) => api.get('/users', { params }),
+  getUsers: (params) => api.get("/users", { params }),
   getUser: (id) => api.get(`/users/${id}`),
-  createUser: (data) => api.post('/users', data),
+  createUser: (data) => api.post("/users", data),
   updateUser: (id, data) => api.put(`/users/${id}`, data),
   deleteUser: (id) => api.delete(`/users/${id}`),
-  updateUserStatus: (id, status) => api.patch(`/users/${id}/status`, { status }),
-  assignRole: (userId, roleId) => api.post(`/users/${userId}/roles`, { roleId }),
-  removeRole: (userId, roleId) => api.delete(`/users/${userId}/roles/${roleId}`),
-}
+  updateUserStatus: (id, status) =>
+    api.patch(`/users/${id}/status`, { status }),
+  assignRole: (userId, roleId) =>
+    api.post(`/users/${userId}/roles`, { roleId }),
+  removeRole: (userId, roleId) =>
+    api.delete(`/users/${userId}/roles/${roleId}`),
+};
 
 // Coupons API
 export const couponsAPI = {
-  getCoupons: (params) => api.get('/coupons', { params }),
+  getCoupons: (params) => api.get("/coupons", { params }),
   getCoupon: (id) => api.get(`/coupons/${id}`),
-  createCoupon: (data) => api.post('/coupons', data),
+  createCoupon: (data) => api.post("/coupons", data),
   updateCoupon: (id, data) => api.put(`/coupons/${id}`, data),
-  updateCouponStatus: (id, status) => api.patch(`/coupons/${id}/status`, { status }),
+  updateCouponStatus: (id, status) =>
+    api.patch(`/coupons/${id}/status`, { status }),
   deleteCoupon: (id) => api.delete(`/coupons/${id}`),
-  validateCoupon: (code) => api.post('/coupons/validate', { code }),
-  getCouponStats: () => api.get('/coupons/stats'),
-}
+  validateCoupon: (code) => api.post("/coupons/validate", { code }),
+  getCouponStats: () => api.get("/coupons/stats"),
+};
 
 // Reviews API
 export const reviewsAPI = {
-  getReviews: (params) => api.get('/reviews', { params }),
-  getProductReviews: (productId, params) => api.get(`/products/${productId}/reviews`, { params }),
-  createReview: (data) => api.post('/reviews', data),
+  getReviews: (params) => api.get("/reviews", { params }),
+  getProductReviews: (productId, params) =>
+    api.get(`/products/${productId}/reviews`, { params }),
+  createReview: (data) => api.post("/reviews", data),
   updateReview: (id, data) => api.put(`/reviews/${id}`, data),
   deleteReview: (id) => api.delete(`/reviews/${id}`),
   likeReview: (id) => api.post(`/reviews/${id}/like`),
   unlikeReview: (id) => api.delete(`/reviews/${id}/like`),
-}
-
-// Addresses API
-export const addressesAPI = {
-  getAddresses: () => api.get('/addresses'),
-  getAddress: (id) => api.get(`/addresses/${id}`),
-  createAddress: (data) => api.post('/addresses', data),
-  updateAddress: (id, data) => api.put(`/addresses/${id}`, data),
-  deleteAddress: (id) => api.delete(`/addresses/${id}`),
-  setDefaultAddress: (id) => api.patch(`/addresses/${id}/default`),
-}
+};
 
 // Upload API
 export const uploadAPI = {
-  uploadImage: (file, type = 'general') => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('type', type)
-    
-    return api.post('/uploads/image', formData, {
+  uploadImage: (file, type = "general") => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+
+    return api.post("/uploads/image", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    })
+    });
   },
-  
-  uploadMultipleImages: (files, type = 'general') => {
-    const formData = new FormData()
-    files.forEach(file => {
-      formData.append('files', file)
-    })
-    formData.append('type', type)
-    
-    return api.post('/uploads/images', formData, {
+
+  uploadMultipleImages: (files, type = "general") => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    formData.append("type", type);
+
+    return api.post("/uploads/images", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    })
+    });
   },
-  
-  deleteImage: (imagePath) => api.delete('/uploads/image', { data: { imagePath } }),
-}
+
+  deleteImage: (imagePath) =>
+    api.delete("/uploads/image", { data: { imagePath } }),
+};
 
 // Stats API (Admin)
 export const statsAPI = {
-  getDashboardStats: () => api.get('/stats/dashboard'),
-  getSalesStats: (params) => api.get('/stats/sales', { params }),
-  getTopProducts: (params) => api.get('/stats/top-products', { params }),
-}
+  getDashboardStats: () => api.get("/stats/dashboard"),
+  getSalesStats: (params) => api.get("/stats/sales", { params }),
+  getTopProducts: (params) => api.get("/stats/top-products", { params }),
+};
 
 // Reports API (Admin)
 export const reportsAPI = {
-  getDashboardStats: () => api.get('/reports/dashboard'),
-  getSalesReport: (params) => api.get('/reports/sales', { params }),
-  getProductsReport: (params) => api.get('/reports/products', { params }),
-  getUsersReport: (params) => api.get('/reports/users', { params }),
-  exportSalesReport: (params) => api.get('/reports/sales/export', { 
-    params,
-    responseType: 'blob'
-  }),
-  exportProductsReport: (params) => api.get('/reports/products/export', { 
-    params,
-    responseType: 'blob'
-  }),
-}
+  getDashboardStats: () => api.get("/reports/dashboard"),
+  getSalesReport: (params) => api.get("/reports/sales", { params }),
+  getProductsReport: (params) => api.get("/reports/products", { params }),
+  getUsersReport: (params) => api.get("/reports/users", { params }),
+  exportSalesReport: (params) =>
+    api.get("/reports/sales/export", {
+      params,
+      responseType: "blob",
+    }),
+  exportProductsReport: (params) =>
+    api.get("/reports/products/export", {
+      params,
+      responseType: "blob",
+    }),
+};
 
 // Search API
 export const searchAPI = {
-  search: (query, params) => api.get('/search', { params: { q: query, ...params } }),
-  getSearchSuggestions: (query) => api.get('/search/suggestions', { params: { q: query } }),
-  getPopularSearches: () => api.get('/search/popular'),
-}
+  search: (query, params) =>
+    api.get("/search", { params: { q: query, ...params } }),
+  getSearchSuggestions: (query) =>
+    api.get("/search/suggestions", { params: { q: query } }),
+  getPopularSearches: () => api.get("/search/popular"),
+};
 
 // Order API
 export const orderAPI = {
-  getMyOrders: (params) => api.get('/orders', { params }),
+  getMyOrders: (params) => api.get("/orders", { params }),
   getOrder: (id) => api.get(`/orders/${id}`),
-  createOrder: (data) => api.post('/orders', data),
+  createOrder: (data) => api.post("/orders", data),
+  createOrderWithVNPay: (data) => api.post("/vnpay/create_order_payment", data),
   cancelOrder: (id) => api.patch(`/orders/${id}/cancel`),
   // Admin/Staff
-  getAllOrders: (params) => api.get('/orders', { params }),
-  updateOrderStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
-  updatePaymentStatus: (id, paymentStatus) => api.patch(`/orders/${id}/payment-status`, { paymentStatus }),
-}
+  getAllOrders: (params) => api.get("/orders", { params }),
+  updateOrderStatus: (id, status) =>
+    api.patch(`/orders/${id}/status`, { status }),
+  updatePaymentStatus: (id, paymentStatus) =>
+    api.patch(`/orders/${id}/payment-status`, { paymentStatus }),
+};
 
 // Review API
 export const reviewAPI = {
-  getProductReviews: (productId, params) => api.get(`/reviews/products/${productId}/reviews`, { params }),
-  createReview: (data) => api.post('/reviews', data),
+  getProductReviews: (productId, params) =>
+    api.get(`/reviews/products/${productId}/reviews`, { params }),
+  createReview: (data) => api.post("/reviews", data),
   updateReview: (id, data) => api.put(`/reviews/${id}`, data),
   deleteReview: (id) => api.delete(`/reviews/${id}`),
   markHelpful: (id) => api.post(`/reviews/${id}/helpful`),
-  getMyReviews: (params) => api.get('/reviews/my-reviews', { params }),
+  getMyReviews: (params) => api.get("/reviews/my-reviews", { params }),
   canReview: (productId) => api.get(`/reviews/can-review/${productId}`),
   // Admin
-  getAllReviews: (params) => api.get('/reviews/admin/all', { params }),
+  getAllReviews: (params) => api.get("/reviews/admin/all", { params }),
   approveReview: (id) => api.patch(`/reviews/admin/${id}/approve`),
   rejectReview: (id) => api.patch(`/reviews/admin/${id}/reject`),
   adminDeleteReview: (id) => api.delete(`/reviews/admin/${id}`),
-}
+};
 
-export default api
+export default api;

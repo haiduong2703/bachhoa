@@ -1,19 +1,19 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import useProductStore from '../../store/productStore'
-import { ArrowRight, Package } from 'lucide-react'
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import useProductStore from "../../store/productStore";
+import { ArrowRight, Package } from "lucide-react";
 
 const CategoryPage = () => {
-  const { categories, isLoading, fetchCategories } = useProductStore()
+  const { categories, isLoading, fetchCategories } = useProductStore();
 
   useEffect(() => {
-    fetchCategories()
-  }, [fetchCategories])
+    fetchCategories();
+  }, [fetchCategories]);
 
   // Get product count for each category
   const getCategoryProductCount = (category) => {
-    return category.productCount || 0
-  }
+    return category.productCount || 0;
+  };
 
   return (
     <div className="min-h-screen">
@@ -24,7 +24,8 @@ const CategoryPage = () => {
             Danh mục sản phẩm
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
-            Khám phá các danh mục sản phẩm đa dạng và phong phú tại Bach Hoa Store
+            Khám phá bộ sưu tập đồ lưu niệm thủ công phong phú mang đậm bản sắc
+            văn hóa
           </p>
         </div>
       </section>
@@ -35,7 +36,10 @@ const CategoryPage = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse"
+                >
                   <div className="w-full h-48 bg-gray-200"></div>
                   <div className="p-6">
                     <div className="h-6 bg-gray-200 rounded mb-4"></div>
@@ -48,56 +52,59 @@ const CategoryPage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {(categories || []).map((category) => (
-              <div key={category.id} className="group">
-                <Link
-                  to={`/products?categoryId=${category.id}`}
-                  className="block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group-hover:transform group-hover:scale-105"
-                >
-                  {/* Category Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={category.image || 'https://via.placeholder.com/400x300'}
-                      alt={category.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
+                <div key={category.id} className="group">
+                  <Link
+                    to={`/products?categoryId=${category.id}`}
+                    className="block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group-hover:transform group-hover:scale-105"
+                  >
+                    {/* Category Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={
+                          category.image ||
+                          "https://via.placeholder.com/400x300"
+                        }
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
 
-                    {/* Product Count Badge */}
-                    <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm px-3 py-1 rounded-full">
-                      <div className="flex items-center space-x-1">
-                        <Package className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {getCategoryProductCount(category)} sản phẩm
-                        </span>
+                      {/* Product Count Badge */}
+                      <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm px-3 py-1 rounded-full">
+                        <div className="flex items-center space-x-1">
+                          <Package className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm font-medium text-gray-900">
+                            {getCategoryProductCount(category)} sản phẩm
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Category Info */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200">
-                      {category.name}
-                    </h3>
+                    {/* Category Info */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200">
+                        {category.name}
+                      </h3>
 
-                    {/* Description */}
-                    {category.description && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {category.description}
-                      </p>
-                    )}
+                      {/* Description */}
+                      {category.description && (
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                          {category.description}
+                        </p>
+                      )}
 
-                    {/* View Products Button */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 text-sm">
-                        Khám phá ngay
-                      </span>
-                      <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform duration-200" />
+                      {/* View Products Button */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 text-sm">
+                          Khám phá ngay
+                        </span>
+                        <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-transform duration-200" />
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -123,7 +130,7 @@ const CategoryPage = () => {
               >
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden bg-white shadow-sm group-hover:shadow-md transition-shadow duration-200">
                   <img
-                    src={category.image || 'https://via.placeholder.com/80x80'}
+                    src={category.image || "https://via.placeholder.com/80x80"}
                     alt={category.name}
                     className="w-full h-full object-cover"
                   />
@@ -147,8 +154,8 @@ const CategoryPage = () => {
             Không tìm thấy danh mục bạn cần?
           </h2>
           <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
-            Hãy liên hệ với chúng tôi để đề xuất danh mục sản phẩm mới.
-            Chúng tôi luôn lắng nghe và cập nhật theo nhu cầu của khách hàng.
+            Hãy liên hệ với chúng tôi để đề xuất danh mục sản phẩm mới. Chúng
+            tôi luôn lắng nghe và cập nhật theo nhu cầu của khách hàng.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -167,7 +174,7 @@ const CategoryPage = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default CategoryPage
+export default CategoryPage;

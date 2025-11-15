@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -12,136 +12,189 @@ import {
   Package,
   Calendar,
   User,
-  DollarSign
-} from 'lucide-react'
-import { orderAPI } from '../../services/api'
-import { formatPrice } from '../../data/mockData'
-import toast from 'react-hot-toast'
+  DollarSign,
+} from "lucide-react";
+import { orderAPI } from "../../services/api";
+import { formatPrice } from "../../data/mockData";
+import toast from "react-hot-toast";
 
 const AdminOrders = () => {
-  const [orders, setOrders] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [dateFilter, setDateFilter] = useState('')
-  const [sortBy, setSortBy] = useState('created_at')
-  const [sortOrder, setSortOrder] = useState('desc')
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    fetchOrders();
+  }, [sortBy, sortOrder]);
 
   const fetchOrders = async () => {
     try {
-      setIsLoading(true)
-      // Real data from database
-      const realOrders = [
-        {
-          id: 1,
-          orderNumber: 'BH1755847565747001',
-          customer: { firstName: 'Khách', lastName: 'Hàng', email: 'customer@bachhoa.com' },
-          status: 'delivered',
-          total: 187000,
-          itemCount: 2,
-          created_at: '2025-08-22T00:26:05.000Z',
-          shippingAddress: 'TP.HCM, Quận 1, Phường 1',
-          paymentMethod: 'cod'
-        }
-      ]
-      setOrders(realOrders)
+      setIsLoading(true);
+
+      // Fetch orders from API
+      const response = await orderAPI.getAllOrders({
+        page: 1,
+        limit: 100,
+        sortBy,
+        sortOrder,
+      });
+
+      const apiOrders = response.data.data.orders || [];
+
+      // Transform API data to match component structure
+      const transformedOrders = apiOrders.map((order) => {
+        const shippingAddr = order.shippingAddress;
+        const addressString = shippingAddr
+          ? `${shippingAddr.city || ""}, ${shippingAddr.district || ""}, ${
+              shippingAddr.ward || ""
+            }`.trim()
+          : "N/A";
+
+        return {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customer: {
+            firstName: order.user?.firstName || "Khách",
+            lastName: order.user?.lastName || "Hàng",
+            email: order.user?.email || "N/A",
+          },
+          status: order.status,
+          total: parseFloat(order.totalAmount),
+          itemCount: order.items?.length || 0,
+          created_at: order.createdAt || order.created_at,
+          shippingAddress: addressString,
+          paymentMethod: order.paymentMethod,
+        };
+      });
+
+      setOrders(transformedOrders);
     } catch (error) {
-      console.error('Failed to fetch orders:', error)
-      toast.error('Không thể tải danh sách đơn hàng')
+      console.error("Failed to fetch orders:", error);
+      toast.error("Không thể tải danh sách đơn hàng");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await orderAPI.updateOrderStatus(orderId, newStatus)
-      toast.success('Cập nhật trạng thái thành công')
-      fetchOrders() // Refresh data
+      await orderAPI.updateOrderStatus(orderId, newStatus);
+      toast.success("Cập nhật trạng thái thành công");
+      fetchOrders(); // Refresh data
     } catch (error) {
-      toast.error('Không thể cập nhật trạng thái')
+      toast.error("Không thể cập nhật trạng thái");
     }
-  }
+  };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         `${order.customer.firstName} ${order.customer.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.customer.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = !statusFilter || order.status === statusFilter
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${order.customer.firstName} ${order.customer.lastName}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      order.customer.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = !statusFilter || order.status === statusFilter;
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {
-    let aValue = a[sortBy]
-    let bValue = b[sortBy]
+    let aValue = a[sortBy];
+    let bValue = b[sortBy];
 
-    if (sortBy === 'customer') {
-      aValue = `${a.customer.firstName} ${a.customer.lastName}`
-      bValue = `${b.customer.firstName} ${b.customer.lastName}`
+    if (sortBy === "customer") {
+      aValue = `${a.customer.firstName} ${a.customer.lastName}`;
+      bValue = `${b.customer.firstName} ${b.customer.lastName}`;
     }
 
-    if (sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1
+    if (sortOrder === "asc") {
+      return aValue > bValue ? 1 : -1;
     } else {
-      return aValue < bValue ? 1 : -1
+      return aValue < bValue ? 1 : -1;
     }
-  })
+  });
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'yellow', text: 'Chờ xử lý', icon: Clock },
-      processing: { color: 'blue', text: 'Đang xử lý', icon: Package },
-      shipping: { color: 'purple', text: 'Đang giao', icon: Truck },
-      completed: { color: 'green', text: 'Hoàn thành', icon: CheckCircle },
-      cancelled: { color: 'red', text: 'Đã hủy', icon: XCircle }
-    }
+      pending: { color: "yellow", text: "Chờ xử lý", icon: Clock },
+      processing: { color: "blue", text: "Đang xử lý", icon: Package },
+      shipping: { color: "purple", text: "Đang giao", icon: Truck },
+      completed: { color: "green", text: "Hoàn thành", icon: CheckCircle },
+      cancelled: { color: "red", text: "Đã hủy", icon: XCircle },
+    };
 
-    const config = statusConfig[status] || statusConfig.pending
-    const Icon = config.icon
+    const config = statusConfig[status] || statusConfig.pending;
+    const Icon = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}
+      >
         <Icon className="w-3 h-3 mr-1" />
         {config.text}
       </span>
-    )
-  }
+    );
+  };
 
   const getPaymentMethodBadge = (method) => {
     const methodConfig = {
-      cod: { color: 'gray', text: 'Tiền mặt' },
-      online: { color: 'blue', text: 'Online' },
-      bank: { color: 'green', text: 'Chuyển khoản' }
-    }
+      cod: {
+        color: "gray",
+        text: "💵 Tiền mặt",
+        bgClass: "bg-gray-100",
+        textClass: "text-gray-800",
+      },
+      vnpay: {
+        color: "blue",
+        text: "💳 VNPAY",
+        bgClass: "bg-blue-100",
+        textClass: "text-blue-800",
+      },
+      online: {
+        color: "green",
+        text: "💳 Online",
+        bgClass: "bg-green-100",
+        textClass: "text-green-800",
+      },
+      bank: {
+        color: "green",
+        text: "🏦 Chuyển khoản",
+        bgClass: "bg-green-100",
+        textClass: "text-green-800",
+      },
+    };
 
-    const config = methodConfig[method] || methodConfig.cod
+    const config = methodConfig[method] || methodConfig.cod;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgClass} ${config.textClass}`}
+      >
         {config.text}
       </span>
-    )
-  }
+    );
+  };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const OrderRow = ({ order }) => (
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+        <div className="text-sm font-medium text-gray-900">
+          {order.orderNumber}
+        </div>
         <div className="text-sm text-gray-500 flex items-center">
           <Calendar className="w-3 h-3 mr-1" />
           {formatDate(order.created_at)}
@@ -167,7 +220,9 @@ const AdminOrders = () => {
         <div className="text-sm text-gray-500">{order.shippingAddress}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{formatPrice(order.total)}</div>
+        <div className="text-sm font-medium text-gray-900">
+          {formatPrice(order.total)}
+        </div>
         {getPaymentMethodBadge(order.paymentMethod)}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -182,27 +237,27 @@ const AdminOrders = () => {
           >
             <Eye className="w-4 h-4" />
           </Link>
-          {order.status === 'pending' && (
+          {order.status === "pending" && (
             <button
-              onClick={() => handleStatusChange(order.id, 'processing')}
+              onClick={() => handleStatusChange(order.id, "processing")}
               className="text-green-600 hover:text-green-900"
               title="Xử lý đơn hàng"
             >
               <CheckCircle className="w-4 h-4" />
             </button>
           )}
-          {order.status === 'processing' && (
+          {order.status === "processing" && (
             <button
-              onClick={() => handleStatusChange(order.id, 'shipping')}
+              onClick={() => handleStatusChange(order.id, "shipping")}
               className="text-purple-600 hover:text-purple-900"
               title="Giao hàng"
             >
               <Truck className="w-4 h-4" />
             </button>
           )}
-          {(order.status === 'pending' || order.status === 'processing') && (
+          {(order.status === "pending" || order.status === "processing") && (
             <button
-              onClick={() => handleStatusChange(order.id, 'cancelled')}
+              onClick={() => handleStatusChange(order.id, "cancelled")}
               className="text-red-600 hover:text-red-900"
               title="Hủy đơn hàng"
             >
@@ -212,14 +267,14 @@ const AdminOrders = () => {
         </div>
       </td>
     </tr>
-  )
+  );
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -272,9 +327,9 @@ const AdminOrders = () => {
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
-                const [field, order] = e.target.value.split('-')
-                setSortBy(field)
-                setSortOrder(order)
+                const [field, order] = e.target.value.split("-");
+                setSortBy(field);
+                setSortOrder(order);
               }}
               className="input"
             >
@@ -296,7 +351,9 @@ const AdminOrders = () => {
             <ShoppingCart className="w-8 h-8 text-blue-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
-              <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {orders.length}
+              </p>
             </div>
           </div>
         </div>
@@ -306,7 +363,7 @@ const AdminOrders = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Chờ xử lý</p>
               <p className="text-2xl font-bold text-gray-900">
-                {orders.filter(o => o.status === 'pending').length}
+                {orders.filter((o) => o.status === "pending").length}
               </p>
             </div>
           </div>
@@ -317,7 +374,7 @@ const AdminOrders = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Đang xử lý</p>
               <p className="text-2xl font-bold text-gray-900">
-                {orders.filter(o => o.status === 'processing').length}
+                {orders.filter((o) => o.status === "processing").length}
               </p>
             </div>
           </div>
@@ -328,7 +385,7 @@ const AdminOrders = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Hoàn thành</p>
               <p className="text-2xl font-bold text-gray-900">
-                {orders.filter(o => o.status === 'completed').length}
+                {orders.filter((o) => o.status === "completed").length}
               </p>
             </div>
           </div>
@@ -339,7 +396,9 @@ const AdminOrders = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Doanh thu</p>
               <p className="text-lg font-bold text-gray-900">
-                {formatPrice(orders.reduce((sum, order) => sum + order.total, 0))}
+                {formatPrice(
+                  orders.reduce((sum, order) => sum + order.total, 0)
+                )}
               </p>
             </div>
           </div>
@@ -374,7 +433,7 @@ const AdminOrders = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedOrders.length > 0 ? (
-                sortedOrders.map(order => (
+                sortedOrders.map((order) => (
                   <OrderRow key={order.id} order={order} />
                 ))
               ) : (
@@ -390,7 +449,7 @@ const AdminOrders = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminOrders
+export default AdminOrders;

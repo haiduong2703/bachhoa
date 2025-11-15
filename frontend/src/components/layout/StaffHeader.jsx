@@ -1,28 +1,22 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../../store/authStore'
-import { useSocketStore } from '../../store/socketStore'
-import { 
-  Menu, 
-  Bell, 
-  User, 
-  LogOut,
-  Settings
-} from 'lucide-react'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
+import { useSocketStore } from "../../store/socketStore";
+import { Menu, Bell, User, LogOut, Settings, Home } from "lucide-react";
 
 const StaffHeader = ({ onSidebarToggle }) => {
-  const navigate = useNavigate()
-  const { user, logout } = useAuthStore()
-  const { notifications, unreadCount, markAllAsRead } = useSocketStore()
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+  const { notifications, unreadCount, markAllAsRead } = useSocketStore();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/auth/login')
-  }
+    await logout();
+    navigate("/auth/login");
+  };
 
-  const recentNotifications = notifications.slice(0, 5)
+  const recentNotifications = notifications.slice(0, 5);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
@@ -35,7 +29,7 @@ const StaffHeader = ({ onSidebarToggle }) => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          
+
           <div className="hidden lg:block">
             <h1 className="text-xl font-semibold text-gray-900">
               Staff Dashboard
@@ -45,6 +39,18 @@ const StaffHeader = ({ onSidebarToggle }) => {
 
         {/* Right Side */}
         <div className="flex items-center space-x-4">
+          {/* Home Button */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Về trang chủ"
+          >
+            <Home className="w-5 h-5" />
+            <span className="hidden sm:inline text-sm font-medium">
+              Trang chủ
+            </span>
+          </button>
+
           {/* Notifications */}
           <div className="relative">
             <button
@@ -54,7 +60,7 @@ const StaffHeader = ({ onSidebarToggle }) => {
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
@@ -75,14 +81,14 @@ const StaffHeader = ({ onSidebarToggle }) => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="max-h-96 overflow-y-auto">
                   {recentNotifications.length > 0 ? (
                     recentNotifications.map((notification) => (
                       <div
                         key={notification.id}
                         className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${
-                          !notification.read ? 'bg-blue-50' : ''
+                          !notification.read ? "bg-blue-50" : ""
                         }`}
                       >
                         <div className="flex items-start space-x-3">
@@ -99,7 +105,9 @@ const StaffHeader = ({ onSidebarToggle }) => {
                               {notification.message}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
-                              {new Date(notification.timestamp).toLocaleString('vi-VN')}
+                              {new Date(notification.timestamp).toLocaleString(
+                                "vi-VN"
+                              )}
                             </p>
                           </div>
                         </div>
@@ -141,19 +149,19 @@ const StaffHeader = ({ onSidebarToggle }) => {
                   </p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
-                
+
                 <div className="py-2">
                   <button
                     onClick={() => {
-                      navigate('/staff/profile')
-                      setShowUserMenu(false)
+                      navigate("/staff/profile");
+                      setShowUserMenu(false);
                     }}
                     className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Thông tin cá nhân</span>
                   </button>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -168,7 +176,7 @@ const StaffHeader = ({ onSidebarToggle }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default StaffHeader
+export default StaffHeader;

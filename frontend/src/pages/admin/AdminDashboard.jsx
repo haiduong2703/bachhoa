@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Users,
   Package,
@@ -10,79 +10,89 @@ import {
   Eye,
   Plus,
   BarChart3,
-  Settings
-} from 'lucide-react'
-import { useAuthStore } from '../../store/authStore'
-import { statsAPI } from '../../services/api'
-import toast from 'react-hot-toast'
+  Settings,
+} from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
+import { statsAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const AdminDashboard = () => {
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalProducts: 0,
     totalOrders: 0,
     totalRevenue: 0,
     pendingOrders: 0,
-    lowStockProducts: 0
-  })
+    lowStockProducts: 0,
+  });
   const [trends, setTrends] = useState({
-    revenue: { percentage: 0, current: 0, previous: 0 }
-  })
-  const [loading, setLoading] = useState(true)
+    revenue: { percentage: 0, current: 0, previous: 0 },
+  });
+  const [loading, setLoading] = useState(true);
 
   // Fetch real data from API
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        setLoading(true)
-        console.log('📊 Fetching dashboard stats from API...')
-        
-        const response = await statsAPI.getDashboardStats()
-        console.log('✅ Dashboard stats received:', response.data)
-        
-        const data = response.data.data
+        setLoading(true);
+        console.log("📊 Fetching dashboard stats from API...");
+
+        const response = await statsAPI.getDashboardStats();
+        console.log("✅ Dashboard stats received:", response.data);
+
+        const data = response.data.data;
         setStats({
           totalUsers: data.totalUsers || 0,
           totalProducts: data.totalProducts || 0,
           totalOrders: data.totalOrders || 0,
           totalRevenue: data.totalRevenue || 0,
           pendingOrders: data.pendingOrders || 0,
-          lowStockProducts: data.lowStockProducts || 0
-        })
-        
+          lowStockProducts: data.lowStockProducts || 0,
+        });
+
         if (data.trends) {
-          setTrends(data.trends)
+          setTrends(data.trends);
         }
       } catch (error) {
-        console.error('❌ Failed to fetch dashboard stats:', error)
-        toast.error('Không thể tải thống kê dashboard')
+        console.error("❌ Failed to fetch dashboard stats:", error);
+        toast.error("Không thể tải thống kê dashboard");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchDashboardStats()
-  }, [])
+    fetchDashboardStats();
+  }, []);
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount)
-  }
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
 
-  const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = 'blue', link }) => (
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    trend,
+    trendValue,
+    color = "blue",
+    link,
+  }) => (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
           {trend && (
-            <div className={`flex items-center mt-2 text-sm ${
-              trend === 'up' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {trend === 'up' ? (
+            <div
+              className={`flex items-center mt-2 text-sm ${
+                trend === "up" ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {trend === "up" ? (
                 <TrendingUp className="w-4 h-4 mr-1" />
               ) : (
                 <TrendingDown className="w-4 h-4 mr-1" />
@@ -106,9 +116,15 @@ const AdminDashboard = () => {
         </div>
       )}
     </div>
-  )
+  );
 
-  const QuickAction = ({ title, description, icon: Icon, link, color = 'blue' }) => (
+  const QuickAction = ({
+    title,
+    description,
+    icon: Icon,
+    link,
+    color = "blue",
+  }) => (
     <Link
       to={link}
       className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
@@ -123,7 +139,7 @@ const AdminDashboard = () => {
         </div>
       </div>
     </Link>
-  )
+  );
 
   if (loading) {
     return (
@@ -133,7 +149,7 @@ const AdminDashboard = () => {
           <p className="mt-4 text-gray-600">Đang tải thống kê...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -144,9 +160,7 @@ const AdminDashboard = () => {
           <h1 className="text-2xl font-bold text-gray-900">
             Chào mừng, {user?.firstName}!
           </h1>
-          <p className="text-gray-600 mt-1">
-            Tổng quan hệ thống Bach Hoa Store
-          </p>
+          <p className="text-gray-600 mt-1">Tổng quan hệ thống Memory Lane</p>
         </div>
         <div className="flex space-x-3">
           <Link
@@ -193,8 +207,10 @@ const AdminDashboard = () => {
           title="Doanh thu"
           value={formatCurrency(stats.totalRevenue)}
           icon={DollarSign}
-          trend={trends.revenue.percentage >= 0 ? 'up' : 'down'}
-          trendValue={`${trends.revenue.percentage >= 0 ? '+' : ''}${trends.revenue.percentage}% so với tháng trước`}
+          trend={trends.revenue.percentage >= 0 ? "up" : "down"}
+          trendValue={`${trends.revenue.percentage >= 0 ? "+" : ""}${
+            trends.revenue.percentage
+          }% so với tháng trước`}
           color="yellow"
           link="/admin/reports"
         />
@@ -253,7 +269,9 @@ const AdminDashboard = () => {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Thao tác nhanh</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Thao tác nhanh
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <QuickAction
             title="Thêm sản phẩm mới"
@@ -300,7 +318,7 @@ const AdminDashboard = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminDashboard
+export default AdminDashboard;

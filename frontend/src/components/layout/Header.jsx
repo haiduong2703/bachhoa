@@ -1,39 +1,41 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
-import { useAuthStore } from '../../store/authStore'
-import { useCartStore } from '../../store/cartStore'
-import { Search, ShoppingCart, User, Menu, X, Settings } from 'lucide-react'
-import logo from "../../asset/icon.png"
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuthStore } from "../../store/authStore";
+import { useCartStore } from "../../store/cartStore";
+import { Search, ShoppingCart, User, Menu, X, Settings } from "lucide-react";
+import logo from "../../asset/icon.png";
 const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
-  const { user, isAuthenticated, logout } = useAuthStore()
-  const { getItemCount } = useCartStore()
-  const [searchQuery, setSearchQuery] = useState('')
-  const navigate = useNavigate()
-  const cartItemCount = getItemCount()
-  
-  // Debug: Log user role
-  console.log('👤 Current user:', user)
-  console.log('👤 User role:', user?.role)
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { getItemCount } = useCartStore();
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const cartItemCount = getItemCount();
+
+  // Check if user is admin or staff
+  const userRoles = user?.roles?.map((role) => role.name) || [];
+  const isAdmin = userRoles.includes("admin");
+  const isStaff = userRoles.includes("staff");
+  const isAdminOrStaff = isAdmin || isStaff;
 
   const handleSearch = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
-  }
+  };
 
   const handleLogout = async () => {
-    await logout()
-    navigate('/')
-  }
+    await logout();
+    navigate("/");
+  };
 
   const menuItems = [
-    { name: 'Trang chủ', path: '/', exact: true },
-    { name: 'Sản phẩm', path: '/products' },
-    { name: 'Danh mục', path: '/categories' },
-    { name: 'Giới thiệu', path: '/about' },
-    { name: 'Liên hệ', path: '/contact' }
-  ]
+    { name: "Trang chủ", path: "/", exact: true },
+    { name: "Sản phẩm", path: "/products" },
+    { name: "Danh mục", path: "/categories" },
+    { name: "Giới thiệu", path: "/about" },
+    { name: "Liên hệ", path: "/contact" },
+  ];
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
@@ -45,7 +47,7 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
               <img src={logo} alt="Logo" />
             </div>
             <span className="text-xl font-bold text-gray-900 hidden sm:block">
-              Bach Hoa
+              Memory Lane
             </span>
           </Link>
 
@@ -94,7 +96,7 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
               <ShoppingCart className="w-5 h-5" />
               {cartItemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                  {cartItemCount > 99 ? "99+" : cartItemCount}
                 </span>
               )}
             </Link>
@@ -108,15 +110,15 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
                     {user?.firstName}
                   </span>
                 </button>
-                
+
                 {/* Dropdown Menu */}
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="py-2">
                     {/* Admin/Staff Menu */}
-                    {(user?.role === 'admin' || user?.role === 'staff') && (
+                    {isAdminOrStaff && (
                       <>
                         <Link
-                          to={user?.role === 'admin' ? '/admin' : '/staff'}
+                          to={isAdmin ? "/admin" : "/staff"}
                           className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
                         >
                           <Settings className="w-4 h-4 mr-2" />
@@ -125,7 +127,7 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
                         <hr className="my-1" />
                       </>
                     )}
-                    
+
                     {/* Customer Menu */}
                     <Link
                       to="/customer"
@@ -198,7 +200,7 @@ const Header = ({ onMobileMenuToggle, isMobileMenuOpen }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

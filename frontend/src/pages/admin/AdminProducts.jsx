@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -11,11 +11,11 @@ import {
   Package,
   AlertTriangle,
   CheckCircle,
-  XCircle
-} from 'lucide-react'
-import useProductStore from '../../store/productStore'
-import { formatPrice } from '../../data/mockData'
-import toast from 'react-hot-toast'
+  XCircle,
+} from "lucide-react";
+import useProductStore from "../../store/productStore";
+import { formatPrice } from "../../data/mockData";
+import toast from "react-hot-toast";
 
 const AdminProducts = () => {
   const {
@@ -25,65 +25,68 @@ const AdminProducts = () => {
     fetchProducts,
     fetchCategories,
     updateProductStatus,
-    deleteProduct
-  } = useProductStore()
+    deleteProduct,
+  } = useProductStore();
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [sortBy, setSortBy] = useState('name')
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
-    fetchProducts()
-    fetchCategories()
-  }, [fetchProducts, fetchCategories])
+    // Admin xem tất cả sản phẩm (không filter status)
+    fetchProducts({ status: "" });
+    fetchCategories();
+  }, [fetchProducts, fetchCategories]);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !selectedCategory ||
-                           product.categories?.some(cat => cat.id.toString() === selectedCategory)
-    const matchesStatus = !statusFilter || product.status === statusFilter
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      !selectedCategory ||
+      product.categories?.some((cat) => cat.id.toString() === selectedCategory);
+    const matchesStatus = !statusFilter || product.status === statusFilter;
 
-    return matchesSearch && matchesCategory && matchesStatus
-  })
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    let aValue = a[sortBy]
-    let bValue = b[sortBy]
+    let aValue = a[sortBy];
+    let bValue = b[sortBy];
 
-    if (sortBy === 'price') {
-      aValue = parseFloat(aValue)
-      bValue = parseFloat(bValue)
+    if (sortBy === "price") {
+      aValue = parseFloat(aValue);
+      bValue = parseFloat(bValue);
     }
 
-    if (sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1
+    if (sortOrder === "asc") {
+      return aValue > bValue ? 1 : -1;
     } else {
-      return aValue < bValue ? 1 : -1
+      return aValue < bValue ? 1 : -1;
     }
-  })
+  });
 
   const handleStatusChange = async (productId, newStatus) => {
     try {
-      await updateProductStatus(productId, newStatus)
-      toast.success('Cập nhật trạng thái thành công')
-      fetchProducts() // Refresh data
+      await updateProductStatus(productId, newStatus);
+      toast.success("Cập nhật trạng thái thành công");
+      fetchProducts(); // Refresh data
     } catch (error) {
-      toast.error('Không thể cập nhật trạng thái')
+      toast.error("Không thể cập nhật trạng thái");
     }
   };
 
   const handleDelete = async (productId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) {
       try {
         await deleteProduct(productId);
         // The store now handles toast messages, so we might not need one here
         // toast.success('Sản phẩm đã được xóa thành công');
         // The store also handles removing the product from the list, so a manual refetch might be optional
         // but good for consistency.
-        fetchProducts(); 
+        fetchProducts();
       } catch (error) {
         // The store now handles error toasts
         // toast.error('Không thể xóa sản phẩm.');
@@ -94,21 +97,23 @@ const AdminProducts = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      active: { color: 'green', text: 'Hoạt động', icon: CheckCircle },
-      inactive: { color: 'gray', text: 'Tạm dừng', icon: XCircle },
-      out_of_stock: { color: 'red', text: 'Hết hàng', icon: AlertTriangle }
-    }
+      active: { color: "green", text: "Hoạt động", icon: CheckCircle },
+      out_of_stock: { color: "red", text: "Hết hàng", icon: AlertTriangle },
+      discontinued: { color: "gray", text: "Ngừng bán", icon: XCircle },
+    };
 
-    const config = statusConfig[status] || statusConfig.inactive
-    const Icon = config.icon
+    const config = statusConfig[status] || statusConfig.out_of_stock;
+    const Icon = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${config.color}-100 text-${config.color}-800`}
+      >
         <Icon className="w-3 h-3 mr-1" />
         {config.text}
       </span>
-    )
-  }
+    );
+  };
 
   const ProductRow = ({ product }) => (
     <tr className="hover:bg-gray-50">
@@ -117,18 +122,22 @@ const AdminProducts = () => {
           <div className="flex-shrink-0 h-12 w-12">
             <img
               className="h-12 w-12 rounded-lg object-cover"
-              src={product.images?.[0]?.imageUrl || '/placeholder-product.jpg'}
+              src={product.images?.[0]?.imageUrl || "/placeholder-product.jpg"}
               alt={product.name}
             />
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+            <div className="text-sm font-medium text-gray-900">
+              {product.name}
+            </div>
             <div className="text-sm text-gray-500">SKU: {product.sku}</div>
           </div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
+        <div className="text-sm text-gray-900">
+          {formatPrice(product.price)}
+        </div>
         {product.comparePrice && (
           <div className="text-sm text-gray-500 line-through">
             {formatPrice(product.comparePrice)}
@@ -139,13 +148,15 @@ const AdminProducts = () => {
         <div className="text-sm text-gray-900">
           {product.inventory?.quantity || 0}
         </div>
-        {product.inventory?.quantity <= (product.inventory?.lowStockThreshold || 0) && (
+        {product.inventory?.quantity <=
+          (product.inventory?.lowStockThreshold || 0) && (
           <div className="text-xs text-red-600">Sắp hết hàng</div>
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900">
-          {product.categories?.map(cat => cat.name).join(', ') || 'Chưa phân loại'}
+          {product.categories?.map((cat) => cat.name).join(", ") ||
+            "Chưa phân loại"}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -175,16 +186,24 @@ const AdminProducts = () => {
             <Trash2 className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleStatusChange(
-              product.id,
-              product.status === 'active' ? 'inactive' : 'active'
-            )}
+            onClick={() =>
+              handleStatusChange(
+                product.id,
+                product.status === "active" ? "out_of_stock" : "active"
+              )
+            }
             className={`${
-              product.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+              product.status === "active"
+                ? "text-red-600 hover:text-red-900"
+                : "text-green-600 hover:text-green-900"
             }`}
-            title={product.status === 'active' ? 'Tạm dừng' : 'Kích hoạt'}
+            title={product.status === "active" ? "Hết hàng" : "Kích hoạt"}
           >
-            {product.status === 'active' ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+            {product.status === "active" ? (
+              <XCircle className="w-4 h-4" />
+            ) : (
+              <CheckCircle className="w-4 h-4" />
+            )}
           </button>
           <button
             onClick={() => handleDelete(product.id)}
@@ -196,14 +215,14 @@ const AdminProducts = () => {
         </div>
       </td>
     </tr>
-  )
+  );
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -250,7 +269,7 @@ const AdminProducts = () => {
               className="input"
             >
               <option value="">Tất cả danh mục</option>
-              {categories.map(category => (
+              {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -277,9 +296,9 @@ const AdminProducts = () => {
             <select
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
-                const [field, order] = e.target.value.split('-')
-                setSortBy(field)
-                setSortOrder(order)
+                const [field, order] = e.target.value.split("-");
+                setSortBy(field);
+                setSortOrder(order);
               }}
               className="input"
             >
@@ -301,7 +320,9 @@ const AdminProducts = () => {
             <Package className="w-8 h-8 text-blue-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Tổng sản phẩm</p>
-              <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {products.length}
+              </p>
             </div>
           </div>
         </div>
@@ -309,9 +330,11 @@ const AdminProducts = () => {
           <div className="flex items-center">
             <CheckCircle className="w-8 h-8 text-green-600" />
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Đang hoạt động</p>
+              <p className="text-sm font-medium text-gray-600">
+                Đang hoạt động
+              </p>
               <p className="text-2xl font-bold text-gray-900">
-                {products.filter(p => p.status === 'active').length}
+                {products.filter((p) => p.status === "active").length}
               </p>
             </div>
           </div>
@@ -322,9 +345,13 @@ const AdminProducts = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Sắp hết hàng</p>
               <p className="text-2xl font-bold text-gray-900">
-                {products.filter(p =>
-                  p.inventory?.quantity <= (p.inventory?.lowStockThreshold || 0)
-                ).length}
+                {
+                  products.filter(
+                    (p) =>
+                      p.inventory?.quantity <=
+                      (p.inventory?.lowStockThreshold || 0)
+                  ).length
+                }
               </p>
             </div>
           </div>
@@ -335,7 +362,7 @@ const AdminProducts = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Tạm dừng</p>
               <p className="text-2xl font-bold text-gray-900">
-                {products.filter(p => p.status === 'inactive').length}
+                {products.filter((p) => p.status === "out_of_stock").length}
               </p>
             </div>
           </div>
@@ -370,7 +397,7 @@ const AdminProducts = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedProducts.length > 0 ? (
-                sortedProducts.map(product => (
+                sortedProducts.map((product) => (
                   <ProductRow key={product.id} product={product} />
                 ))
               ) : (
@@ -386,7 +413,7 @@ const AdminProducts = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminProducts
+export default AdminProducts;
