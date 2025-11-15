@@ -23,7 +23,7 @@ export const getProducts = catchAsync(async (req, res) => {
     category,
     minPrice,
     maxPrice,
-    status = "active",
+    status,
     featured,
     sort = "created_at",
     order = "desc",
@@ -54,9 +54,16 @@ export const getProducts = catchAsync(async (req, res) => {
   ];
 
   // Build where conditions
-  if (status) {
-    where.status = status;
+  // Filter by status:
+  // - If status is explicitly '' (empty string) -> không filter (cho admin/staff)
+  // - If status is provided with value -> filter theo value đó
+  // - If status is undefined -> default 'active' (cho customer/public)
+  if (status === undefined) {
+    where.status = "active"; // Default for public/customer
+  } else if (status !== "") {
+    where.status = status; // Filter by specific status
   }
+  // else: status === '' -> không filter (show all cho admin/staff)
 
   if (featured !== undefined) {
     where.featured = featured === "true";
@@ -117,7 +124,7 @@ export const getProducts = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'averageRating'
+          "averageRating",
         ],
         [
           sequelize.literal(`(
@@ -126,10 +133,10 @@ export const getProducts = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'reviewCount'
-        ]
-      ]
-    }
+          "reviewCount",
+        ],
+      ],
+    },
   });
 
   console.log(`📦 Found ${products.length} products`);
@@ -197,7 +204,7 @@ export const getFeaturedProducts = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'averageRating'
+          "averageRating",
         ],
         [
           sequelize.literal(`(
@@ -206,10 +213,10 @@ export const getFeaturedProducts = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'reviewCount'
-        ]
-      ]
-    }
+          "reviewCount",
+        ],
+      ],
+    },
   });
 
   res.json({
@@ -260,7 +267,7 @@ export const getProduct = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'averageRating'
+          "averageRating",
         ],
         [
           sequelize.literal(`(
@@ -269,10 +276,10 @@ export const getProduct = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'reviewCount'
-        ]
-      ]
-    }
+          "reviewCount",
+        ],
+      ],
+    },
   });
 
   if (!product) {
@@ -551,7 +558,29 @@ export const updateProductStatus = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const product = await Product.findByPk(id);
+  const product = await Product.findByPk(id, {
+    include: [
+      {
+        model: ProductImage,
+        as: "images",
+        separate: true,
+        order: [
+          ["isPrimary", "DESC"],
+          ["sortOrder", "ASC"],
+        ],
+      },
+      {
+        model: Category,
+        as: "categories",
+        through: { attributes: [] },
+      },
+      {
+        model: Inventory,
+        as: "inventory",
+      },
+    ],
+  });
+
   if (!product) {
     throw new NotFoundError("Product not found");
   }
@@ -562,11 +591,7 @@ export const updateProductStatus = catchAsync(async (req, res) => {
     status: "success",
     message: "Product status updated successfully",
     data: {
-      product: {
-        id: product.id,
-        name: product.name,
-        status: product.status,
-      },
+      product,
     },
   });
 });
@@ -625,7 +650,7 @@ export const getProductsByCategory = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'averageRating'
+          "averageRating",
         ],
         [
           sequelize.literal(`(
@@ -634,10 +659,10 @@ export const getProductsByCategory = catchAsync(async (req, res) => {
             WHERE reviews.product_id = Product.id
             AND reviews.status = 'approved'
           )`),
-          'reviewCount'
-        ]
-      ]
-    }
+          "reviewCount",
+        ],
+      ],
+    },
   });
 
   const totalPages = Math.ceil(count / limit);

@@ -44,25 +44,6 @@ CREATE TABLE IF NOT EXISTS user_roles (
     UNIQUE KEY unique_user_role (user_id, role_id)
 );
 
--- Create addresses table
-CREATE TABLE IF NOT EXISTS addresses (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    type ENUM('home', 'work', 'other') DEFAULT 'home',
-    recipient_name VARCHAR(100) NOT NULL,
-    recipient_phone VARCHAR(20) NOT NULL,
-    address_line_1 VARCHAR(255) NOT NULL,
-    address_line_2 VARCHAR(255),
-    ward VARCHAR(100) NOT NULL,
-    district VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    postal_code VARCHAR(20),
-    is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 -- Create categories table
 CREATE TABLE IF NOT EXISTS categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -285,7 +266,6 @@ CREATE INDEX idx_products_status ON products(status);
 CREATE INDEX idx_products_featured ON products(featured);
 CREATE INDEX idx_categories_parent_id ON categories(parent_id);
 CREATE INDEX idx_categories_status ON categories(status);
-CREATE INDEX idx_addresses_user_id ON addresses(user_id);
 CREATE INDEX idx_product_images_product_id ON product_images(product_id);
 CREATE INDEX idx_inventory_product_id ON inventory(product_id);
 CREATE INDEX idx_orders_user_id ON orders(user_id);

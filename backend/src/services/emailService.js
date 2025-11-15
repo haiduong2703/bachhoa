@@ -1,7 +1,7 @@
-import nodemailer from 'nodemailer';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import nodemailer from "nodemailer";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,29 +15,29 @@ class EmailService {
   async init() {
     try {
       // Check if email service is enabled
-      if (process.env.SMTP_ENABLED === 'false') {
-        console.log('📧 Email service is disabled');
+      if (process.env.SMTP_ENABLED === "false") {
+        console.log("📧 Email service is disabled");
         return;
       }
 
       this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
-        secure: process.env.SMTP_SECURE === 'true',
+        secure: process.env.SMTP_SECURE === "true",
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
+          pass: process.env.SMTP_PASS,
+        },
       });
 
       // Verify connection
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
         await this.transporter.verify();
-        console.log('✅ Email service initialized successfully');
+        console.log("✅ Email service initialized successfully");
       }
     } catch (error) {
-      console.error('❌ Email service initialization failed:', error);
-      console.log('💡 Set SMTP_ENABLED=false in .env to disable email service');
+      console.error("❌ Email service initialization failed:", error);
+      console.log("💡 Set SMTP_ENABLED=false in .env to disable email service");
     }
   }
 
@@ -48,8 +48,12 @@ class EmailService {
    */
   async loadTemplate(templateName) {
     try {
-      const templatePath = path.join(__dirname, '../templates/emails', `${templateName}.html`);
-      return await fs.readFile(templatePath, 'utf-8');
+      const templatePath = path.join(
+        __dirname,
+        "../templates/emails",
+        `${templateName}.html`
+      );
+      return await fs.readFile(templatePath, "utf-8");
     } catch (error) {
       console.error(`Failed to load email template: ${templateName}`, error);
       return this.getDefaultTemplate();
@@ -80,13 +84,13 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Bach Hoa Store</h1>
+            <h1>Memory Lane</h1>
           </div>
           <div class="content">
             {{content}}
           </div>
           <div class="footer">
-            <p>&copy; 2024 Bach Hoa Store. All rights reserved.</p>
+            <p>&copy; 2024 Memory Lane. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -102,10 +106,10 @@ class EmailService {
    */
   processTemplate(template, data) {
     let processed = template;
-    
-    Object.keys(data).forEach(key => {
-      const regex = new RegExp(`{{${key}}}`, 'g');
-      processed = processed.replace(regex, data[key] || '');
+
+    Object.keys(data).forEach((key) => {
+      const regex = new RegExp(`{{${key}}}`, "g");
+      processed = processed.replace(regex, data[key] || "");
     });
 
     return processed;
@@ -124,13 +128,15 @@ class EmailService {
    */
   async sendEmail(options) {
     // Check if email service is disabled
-    if (process.env.SMTP_ENABLED === 'false') {
-      console.log(`📧 Email would be sent to ${options.to}: ${options.subject} (Email service disabled)`);
-      return { messageId: 'disabled', accepted: [options.to] };
+    if (process.env.SMTP_ENABLED === "false") {
+      console.log(
+        `📧 Email would be sent to ${options.to}: ${options.subject} (Email service disabled)`
+      );
+      return { messageId: "disabled", accepted: [options.to] };
     }
 
     if (!this.transporter) {
-      throw new Error('Email service not initialized');
+      throw new Error("Email service not initialized");
     }
 
     const { to, subject, template, data = {}, html, text } = options;
@@ -145,19 +151,21 @@ class EmailService {
     } else if (!html) {
       // Use default template with content
       const defaultTemplate = this.getDefaultTemplate();
-      emailHtml = this.processTemplate(defaultTemplate, { 
-        ...data, 
+      emailHtml = this.processTemplate(defaultTemplate, {
+        ...data,
         subject,
-        content: data.content || 'No content provided'
+        content: data.content || "No content provided",
       });
     }
 
     const mailOptions = {
-      from: `${process.env.FROM_NAME || 'Bach Hoa Store'} <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+      from: `${process.env.FROM_NAME || "Memory Lane"} <${
+        process.env.FROM_EMAIL || process.env.SMTP_USER
+      }>`,
       to,
       subject,
       html: emailHtml,
-      text: emailText
+      text: emailText,
     };
 
     try {
@@ -176,12 +184,12 @@ class EmailService {
   async sendWelcomeEmail(user) {
     return this.sendEmail({
       to: user.email,
-      subject: 'Welcome to Bach Hoa Store!',
-      template: 'welcome',
+      subject: "Welcome to Memory Lane!",
+      template: "welcome",
       data: {
         name: user.getFullName(),
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   }
 
@@ -191,12 +199,12 @@ class EmailService {
   async sendEmailVerification(user, verificationUrl) {
     return this.sendEmail({
       to: user.email,
-      subject: 'Verify your email address',
-      template: 'email-verification',
+      subject: "Verify your email address",
+      template: "email-verification",
       data: {
         name: user.getFullName(),
-        verificationUrl
-      }
+        verificationUrl,
+      },
     });
   }
 
@@ -206,13 +214,13 @@ class EmailService {
   async sendPasswordReset(user, resetUrl) {
     return this.sendEmail({
       to: user.email,
-      subject: 'Password Reset Request',
-      template: 'password-reset',
+      subject: "Password Reset Request",
+      template: "password-reset",
       data: {
         name: user.getFullName(),
         resetUrl,
-        expiresIn: '10 minutes'
-      }
+        expiresIn: "10 minutes",
+      },
     });
   }
 
@@ -223,14 +231,14 @@ class EmailService {
     return this.sendEmail({
       to: user.email,
       subject: `Order Confirmation - ${order.orderNumber}`,
-      template: 'order-confirmation',
+      template: "order-confirmation",
       data: {
         name: user.getFullName(),
         orderNumber: order.orderNumber,
         totalAmount: order.totalAmount,
         items: order.items,
-        shippingAddress: order.shippingAddress
-      }
+        shippingAddress: order.shippingAddress,
+      },
     });
   }
 
@@ -239,25 +247,26 @@ class EmailService {
    */
   async sendOrderStatusUpdate(user, order, oldStatus) {
     const statusMessages = {
-      confirmed: 'Your order has been confirmed and is being prepared.',
-      packing: 'Your order is being packed for shipment.',
-      shipping: 'Your order has been shipped and is on its way.',
-      delivered: 'Your order has been delivered successfully.',
-      cancelled: 'Your order has been cancelled.',
-      returned: 'Your order return has been processed.'
+      confirmed: "Your order has been confirmed and is being prepared.",
+      packing: "Your order is being packed for shipment.",
+      shipping: "Your order has been shipped and is on its way.",
+      delivered: "Your order has been delivered successfully.",
+      cancelled: "Your order has been cancelled.",
+      returned: "Your order return has been processed.",
     };
 
     return this.sendEmail({
       to: user.email,
       subject: `Order Update - ${order.orderNumber}`,
-      template: 'order-status-update',
+      template: "order-status-update",
       data: {
         name: user.getFullName(),
         orderNumber: order.orderNumber,
         status: order.status,
-        statusMessage: statusMessages[order.status] || 'Your order status has been updated.',
-        trackingNumber: order.trackingNumber
-      }
+        statusMessage:
+          statusMessages[order.status] || "Your order status has been updated.",
+        trackingNumber: order.trackingNumber,
+      },
     });
   }
 
@@ -268,7 +277,7 @@ class EmailService {
    */
   async sendBulkEmails(emails) {
     const results = [];
-    
+
     for (const email of emails) {
       try {
         const result = await this.sendEmail(email);
@@ -288,10 +297,14 @@ const emailService = new EmailService();
 // Export convenience functions
 export const sendEmail = (options) => emailService.sendEmail(options);
 export const sendWelcomeEmail = (user) => emailService.sendWelcomeEmail(user);
-export const sendEmailVerification = (user, url) => emailService.sendEmailVerification(user, url);
-export const sendPasswordReset = (user, url) => emailService.sendPasswordReset(user, url);
-export const sendOrderConfirmation = (user, order) => emailService.sendOrderConfirmation(user, order);
-export const sendOrderStatusUpdate = (user, order, oldStatus) => emailService.sendOrderStatusUpdate(user, order, oldStatus);
+export const sendEmailVerification = (user, url) =>
+  emailService.sendEmailVerification(user, url);
+export const sendPasswordReset = (user, url) =>
+  emailService.sendPasswordReset(user, url);
+export const sendOrderConfirmation = (user, order) =>
+  emailService.sendOrderConfirmation(user, order);
+export const sendOrderStatusUpdate = (user, order, oldStatus) =>
+  emailService.sendOrderStatusUpdate(user, order, oldStatus);
 export const sendBulkEmails = (emails) => emailService.sendBulkEmails(emails);
 
 export default emailService;

@@ -1,6 +1,6 @@
-import JWTService from '../utils/jwt.js';
-import { User, Role } from '../models/index.js';
-import { AppError } from '../utils/errors.js';
+import JWTService from "../utils/jwt.js";
+import { User, Role } from "../models/index.js";
+import { AppError } from "../utils/errors.js";
 
 /**
  * Authentication middleware
@@ -13,7 +13,7 @@ export const authenticate = async (req, res, next) => {
     const token = JWTService.extractTokenFromHeader(authHeader);
 
     if (!token) {
-      return next(new AppError('Access token is required', 401));
+      return next(new AppError("Access token is required", 401));
     }
 
     // Verify token
@@ -21,20 +21,22 @@ export const authenticate = async (req, res, next) => {
 
     // Find user with roles
     const user = await User.findByPk(decoded.id, {
-      include: [{
-        model: Role,
-        as: 'roles',
-        through: { attributes: [] }
-      }],
-      attributes: { exclude: ['password'] }
+      include: [
+        {
+          model: Role,
+          as: "roles",
+          through: { attributes: [] },
+        },
+      ],
+      attributes: { exclude: ["password"] },
     });
 
     if (!user) {
-      return next(new AppError('User not found', 401));
+      return next(new AppError("User not found", 401));
     }
 
-    if (user.status !== 'active') {
-      return next(new AppError('Account is inactive', 401));
+    if (user.status !== "active") {
+      return next(new AppError("Account is inactive", 401));
     }
 
     // Attach user to request
@@ -43,8 +45,8 @@ export const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
-    if (error.message === 'Invalid access token') {
-      return next(new AppError('Invalid or expired token', 401));
+    if (error.message === "Invalid access token") {
+      return next(new AppError("Invalid or expired token", 401));
     }
     next(error);
   }
@@ -62,15 +64,17 @@ export const optionalAuth = async (req, res, next) => {
     if (token) {
       const decoded = await JWTService.verifyAccessToken(token);
       const user = await User.findByPk(decoded.id, {
-        include: [{
-          model: Role,
-          as: 'roles',
-          through: { attributes: [] }
-        }],
-        attributes: { exclude: ['password'] }
+        include: [
+          {
+            model: Role,
+            as: "roles",
+            through: { attributes: [] },
+          },
+        ],
+        attributes: { exclude: ["password"] },
       });
 
-      if (user && user.status === 'active') {
+      if (user && user.status === "active") {
         req.user = user;
         req.token = token;
       }
@@ -90,16 +94,48 @@ export const optionalAuth = async (req, res, next) => {
 export const authorize = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
-      return next(new AppError('Authentication required', 401));
+      return next(new AppError("Authentication required", 401));
     }
 
-    const userRoles = req.user.roles?.map(role => role.name) || [];
-    
+    const userRoles = req.user.roles?.map((role) => role.name) || [];
+
+    // Debug logging với detail hơn
+    console.log("🔐 Authorization check:");
+    console.log("  User ID:", req.user.id);
+    console.log("  User Email:", req.user.email);
+    console.log("  User Roles (raw):", req.user.roles);
+    console.log("  User Roles (mapped):", userRoles);
+    console.log("  User Roles (JSON):", JSON.stringify(userRoles));
+    console.log("  Allowed Roles:", allowedRoles);
+    console.log("  Allowed Roles (JSON):", JSON.stringify(allowedRoles));
+
+    // Trim và lowercase để so sánh
+    const normalizedUserRoles = userRoles.map((r) =>
+      String(r).trim().toLowerCase()
+    );
+    const normalizedAllowedRoles = allowedRoles.map((r) =>
+      String(r).trim().toLowerCase()
+    );
+
+    console.log("  Normalized User Roles:", normalizedUserRoles);
+    console.log("  Normalized Allowed Roles:", normalizedAllowedRoles);
+
     // Check if user has any of the allowed roles
-    const hasPermission = allowedRoles.some(role => userRoles.includes(role));
+    const hasPermission = normalizedAllowedRoles.some((role) =>
+      normalizedUserRoles.includes(role)
+    );
+
+    console.log("  Has Permission:", hasPermission);
 
     if (!hasPermission) {
-      return next(new AppError('Insufficient permissions', 403));
+      return next(
+        new AppError(
+          `Insufficient permissions. Required: ${allowedRoles.join(
+            ", "
+          )}. User has: ${userRoles.join(", ") || "none"}`,
+          403
+        )
+      );
     }
 
     next();
@@ -113,13 +149,15 @@ export const authorize = (...allowedRoles) => {
 export const requirePermission = (permission) => {
   return (req, res, next) => {
     if (!req.user) {
-      return next(new AppError('Authentication required', 401));
+      return next(new AppError("Authentication required", 401));
     }
 
     const userRoles = req.user.roles || [];
-    
+
     // Check if any user role has the required permission
-    const hasPermission = userRoles.some(role => role.hasPermission(permission));
+    const hasPermission = userRoles.some((role) =>
+      role.hasPermission(permission)
+    );
 
     if (!hasPermission) {
       return next(new AppError(`Permission '${permission}' required`, 403));
@@ -134,26 +172,27 @@ export const requirePermission = (permission) => {
  * Allows access if user is the owner of the resource or has admin role
  * @param {string} resourceUserIdField - Field name containing the user ID (default: 'userId')
  */
-export const authorizeOwnerOrAdmin = (resourceUserIdField = 'userId') => {
+export const authorizeOwnerOrAdmin = (resourceUserIdField = "userId") => {
   return (req, res, next) => {
     if (!req.user) {
-      return next(new AppError('Authentication required', 401));
+      return next(new AppError("Authentication required", 401));
     }
 
-    const userRoles = req.user.roles?.map(role => role.name) || [];
-    const isAdmin = userRoles.includes('admin');
-    
+    const userRoles = req.user.roles?.map((role) => role.name) || [];
+    const isAdmin = userRoles.includes("admin");
+
     // Admin can access everything
     if (isAdmin) {
       return next();
     }
 
     // Check if user is the owner
-    const resourceUserId = req.params[resourceUserIdField] || req.body[resourceUserIdField];
+    const resourceUserId =
+      req.params[resourceUserIdField] || req.body[resourceUserIdField];
     const isOwner = resourceUserId && parseInt(resourceUserId) === req.user.id;
 
     if (!isOwner) {
-      return next(new AppError('Access denied', 403));
+      return next(new AppError("Access denied", 403));
     }
 
     next();
@@ -174,11 +213,11 @@ export const authRateLimit = (req, res, next) => {
  */
 export const requireEmailVerification = (req, res, next) => {
   if (!req.user) {
-    return next(new AppError('Authentication required', 401));
+    return next(new AppError("Authentication required", 401));
   }
 
   if (!req.user.emailVerified) {
-    return next(new AppError('Email verification required', 403));
+    return next(new AppError("Email verification required", 403));
   }
 
   next();
@@ -200,10 +239,10 @@ export const refreshTokenIfNeeded = async (req, res, next) => {
     if (expiration && expiration < fiveMinutesFromNow) {
       // Generate new token pair
       const tokens = await JWTService.generateTokenPair(req.user);
-      
+
       // Add new tokens to response headers
-      res.set('X-New-Access-Token', tokens.accessToken);
-      res.set('X-New-Refresh-Token', tokens.refreshToken);
+      res.set("X-New-Access-Token", tokens.accessToken);
+      res.set("X-New-Refresh-Token", tokens.refreshToken);
     }
 
     next();
